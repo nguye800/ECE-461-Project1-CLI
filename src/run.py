@@ -2,7 +2,7 @@
 
 import sys
 import json
-import test_hf_api  # Hugging Face helper
+import src.hf_api as hf_api  # Hugging Face helper
 
 def main():
     if len(sys.argv) < 2:
@@ -31,9 +31,9 @@ def main():
         for url in urls:
             if "huggingface.co" in url:
                 try:
-                    kind, repo_id = test_hf_api.parse_hf_url(url)
-                    api_url = test_hf_api.build_api_url(kind, repo_id)
-                    data = test_hf_api.fetch_json(api_url, token=None)
+                    kind, repo_id = hf_api.parse_hf_url(url)
+                    api_url = hf_api.build_api_url(kind, repo_id)
+                    data = hf_api.fetch_json(api_url, token=None)
 
                     # Build JSON record
                     record = {

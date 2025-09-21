@@ -1,0 +1,6 @@
+[project]
+name = "clipkg"
+version = "0.1.0"
+
+[project.scripts]
+run = "clipkg.run:main"
