@@ -8,8 +8,8 @@ from unittest.mock import patch
 
 import requests
 
-import src.hf_api
-
+from src.hf_api import hfAPI
+hf_api = hfAPI()
 
 class ParseHfUrlTests(unittest.TestCase):
     def test_parse_model_urls(self):

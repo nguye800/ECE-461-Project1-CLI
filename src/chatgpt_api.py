@@ -11,27 +11,30 @@ import argparse
 import os
 from openai import OpenAI
 
-def main():
-    parser = argparse.ArgumentParser(description="Send a prompt to the OpenAI ChatGPT API")
-    parser.add_argument("prompt", help="The text prompt to send")
-    parser.add_argument("--model", default="gpt-4.1-mini", help="Model name (default: gpt-4.1-mini)")
-    args = parser.parse_args()
+class openaiAPI():
 
-    # Get API key from env variable
-    api_key = os.environ.get("OPENAI_API_KEY")
-    if not api_key:
-        raise RuntimeError("Missing OPENAI_API_KEY environment variable")
+    def main(self):
+        parser = argparse.ArgumentParser(description="Send a prompt to the OpenAI ChatGPT API")
+        parser.add_argument("prompt", help="The text prompt to send")
+        parser.add_argument("--model", default="gpt-4.1-mini", help="Model name (default: gpt-4.1-mini)")
+        args = parser.parse_args()
 
-    client = OpenAI(api_key=api_key)
+        # Get API key from env variable
+        api_key = os.environ.get("OPENAI_API_KEY")
+        if not api_key:
+            raise RuntimeError("Missing OPENAI_API_KEY environment variable")
 
-    # Call the chat completions API
-    response = client.chat.completions.create(
-        model=args.model,
-        messages=[{"role": "user", "content": args.prompt}],
-    )
+        client = OpenAI(api_key=api_key)
 
-    # Print the model’s reply
-    print(response.choices[0].message.content.strip())
+        # Call the chat completions API
+        response = client.chat.completions.create(
+            model=args.model,
+            messages=[{"role": "user", "content": args.prompt}],
+        )
+
+        # Print the model’s reply
+        print(response.choices[0].message.content.strip())
 
 if __name__ == "__main__":
-    main()
+    apiTester = openaiAPI()
+    apiTester.main()
