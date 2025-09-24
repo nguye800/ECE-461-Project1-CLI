@@ -7,7 +7,7 @@
 # Lucas
 - URL checking
 - HF api to store model information (modify hf_api.py code) and store in cache
- - from functools import lru_cache
+ - from functools import lru_cache just call api.get_info(url, False) again and results should already be cached in lru cache
 - Use git metadata on HF model for metric
 - Use Purdue GenAI studio api to get info (modify chatgpt_api.py)
 # Eric + Shriya

@@ -5,7 +5,7 @@ import unittest
 from unittest import mock
 from unittest.mock import patch, MagicMock
 
-from src.chatgpt_api import openaiAPI
+from src.utils.llm_api import openaiAPI
 
 
 class ChatPromptTests(unittest.TestCase):
