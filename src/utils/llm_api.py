@@ -11,31 +11,44 @@ Usage:
 
 import argparse
 import os
+from dotenv import load_dotenv, dotenv_values
+import requests
 
-class openaiAPI():
+class llmAPI():
 
-    def main(self):
-        parser = argparse.ArgumentParser(description="Send a prompt to the OpenAI ChatGPT API")
-        parser.add_argument("prompt", help="The text prompt to send")
-        parser.add_argument("--model", default="gpt-4.1-mini", help="Model name (default: gpt-4.1-mini)")
-        args = parser.parse_args()
+    def make_prompt(self, token, role, content):
+        url = "https://genai.rcac.purdue.edu/api/chat/completions"
+        headers = {
+            "Authorization": f"Bearer {token}",
+            "Content-Type": "application/json"
+        }
+        body = {
+            "model": "llama3.1:latest",
+            "messages": [
+            {
+                "role": role,
+                "content": content
+            }
+            ],
+            "stream": False
+        }
+        response = requests.post(url, headers=headers, json=body)
+        if response.status_code == 200:
+            return response.text
+        else:
+            raise Exception(f"Error: {response.status_code}, {response.text}")
 
+    def main(self, text):
         # Get API key from env variable
-        api_key = os.environ.get("OPENAI_API_KEY")
+        load_dotenv()
+        api_key = os.environ.get("GENAI_STUDIO_TOKEN")
         if not api_key:
-            raise RuntimeError("Missing OPENAI_API_KEY environment variable")
+            raise RuntimeError("Missing GENAI_STUDIO_TOKEN environment variable")
 
-        client = OpenAI(api_key=api_key)
+        response = self.make_prompt(api_key, role="user", content=text)
 
-        # Call the chat completions API
-        response = client.chat.completions.create(
-            model=args.model,
-            messages=[{"role": "user", "content": args.prompt}],
-        )
-
-        # Print the model’s reply
-        print(response.choices[0].message.content.strip())
+        return response
 
 if __name__ == "__main__":
-    apiTester = openaiAPI()
-    apiTester.main()
+    apiTester = llmAPI()
+    print(apiTester.main("Please give me a list of assessment areas that make good quality code"))
