@@ -11,3 +11,4 @@ class RampUpTime(Metric):
         
     def getRampUpTime(self) -> float:
         return self.rampUpTime
+
