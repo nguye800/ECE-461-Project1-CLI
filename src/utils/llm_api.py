@@ -3,7 +3,7 @@
 chat_prompt.py — Send a command-line prompt to OpenAI's ChatGPT API and print the response.
 
 Usage:
-    python chat_prompt.py "Write a haiku about autumn leaves"
+    python llm_api.py
 
     https://genai.rcac.purdue.edu/
 
@@ -41,7 +41,7 @@ class llmAPI():
     def main(self, text):
         # Get API key from env variable
         load_dotenv()
-        api_key = os.environ.get("GENAI_STUDIO_TOKEN")
+        api_key = os.environ.get("GEN_AI_STUDIO_API_KEY")
         if not api_key:
             raise RuntimeError("Missing GENAI_STUDIO_TOKEN environment variable")
 
