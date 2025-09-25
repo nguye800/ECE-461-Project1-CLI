@@ -2,7 +2,7 @@
 
 import sys
 import json
-import src.hf_api as hf_api  # Hugging Face helper
+import src.utils.hf_api as hf_api  # Hugging Face helper
 
 def main():
     if len(sys.argv) < 2:

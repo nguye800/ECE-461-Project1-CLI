@@ -3,7 +3,7 @@
 Fetch and print metadata for a Hugging Face model or dataset from its URL.
 
 Usage:
-  python hf_inspect.py https://huggingface.co/meta-llama/Llama-3.1-8B-Instruct
+  python hf_api.py
 """
 import argparse
 import json
@@ -11,6 +11,7 @@ import os
 import re
 import sys
 from urllib.parse import urlparse
+from functools import lru_cache
 
 import requests
 
@@ -96,17 +97,16 @@ class hfAPI():
         resp.raise_for_status()
         return resp.json()
 
-
-    def main(self):
+    @lru_cache(maxsize=128)
+    def get_info(self, url, printCLI=True):
         parser = argparse.ArgumentParser(description="Inspect a Hugging Face model or dataset via the public API.")
         parser.add_argument("url", help="URL of the Hugging Face model or dataset (e.g., https://huggingface.co/bert-base-uncased or https://huggingface.co/datasets/squad)")
         parser.add_argument("--token", help="Hugging Face access token (or set HF_TOKEN env var).", default=None)
-        args = parser.parse_args()
 
-        token = args.token or os.environ.get("HF_TOKEN")
+        token = os.environ.get("HF_TOKEN")
 
         try:
-            kind, repo_id = self.parse_hf_url(args.url)
+            kind, repo_id = self.parse_hf_url(url)
         except ValueError as e:
             print(f"Error: {e}", file=sys.stderr)
             sys.exit(2)
@@ -124,21 +124,36 @@ class hfAPI():
             print(f"Network error while fetching {api_url}: {e}", file=sys.stderr)
             sys.exit(1)
 
-        print(json.dumps(
-            {
-                "_requested": {
-                    "kind": kind,
-                    "repo_id": repo_id,
-                    "api_url": api_url,
-                    "host": "huggingface.co"
+        if printCLI:
+            print(json.dumps(
+                {
+                    "_requested": {
+                        "kind": kind,
+                        "repo_id": repo_id,
+                        "api_url": api_url,
+                        "host": "huggingface.co"
+                    },
+                    "data": data
                 },
-                "data": data
-            },
-            indent=2,
-            sort_keys=False
-        ))
+                indent=2,
+                sort_keys=False
+            ))
+        else:
+            return json.dumps(
+                {
+                    "_requested": {
+                        "kind": kind,
+                        "repo_id": repo_id,
+                        "api_url": api_url,
+                        "host": "huggingface.co"
+                    },
+                    "data": data
+                },
+                indent=2,
+                sort_keys=False
+            )
 
 
 if __name__ == "__main__":
     apiTester = hfAPI()
-    apiTester.main()
+    apiTester.get_info("https://huggingface.co/meta-llama/Llama-3.1-8B-Instruct")

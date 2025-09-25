@@ -1,3 +1,5 @@
 openai==1.50.2
 python-dotenv>=1.0.0
 requests
+huggingface_hub
+dotenv
