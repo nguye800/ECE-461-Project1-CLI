@@ -6,9 +6,7 @@ from src.classes.License import License
 def test_license(capsys):
     m = License()
     score, latency = m.evaluate("owner/repo")
-    # print so you can see it in terminal with -s
     print(f"License score={score:.3f}, latency_ms={latency*1000:.1f}")
-    # basic sanity checks (won't tie you to exact values)
     assert 0.0 <= score <= 1.0
     assert latency >= 0.0
 ------------------------------------------------------------------------------------------------------------------------------------------
