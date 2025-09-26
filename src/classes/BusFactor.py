@@ -15,7 +15,8 @@ class BusFactor(Metric):
         evenness = 1.0 / (1.0 + (std / avg) **2) # rewards balanced contribution, penalizes concentration
         saturation_coeff = 5
         groupsize = 1 - math.exp((-1.0 / avg) / saturation_coeff)
-        self.NumContributors = evenness * groupsize
+        self.NumContributors = len(authors)
+        self.metricScore = evenness * groupsize
 
     def getNumContributors(self) -> int:
         return self.NumContributors

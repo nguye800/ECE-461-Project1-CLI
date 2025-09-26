@@ -3,6 +3,8 @@
 import sys
 import json
 import src.utils.hf_api as hf_api  # Hugging Face helper
+from utils.check_url import checkURL
+from classes import ScoreCard
 
 def main():
     if len(sys.argv) < 2:
@@ -31,23 +33,11 @@ def main():
         for url in urls:
             if "huggingface.co" in url:
                 try:
-                    kind, repo_id = hf_api.parse_hf_url(url)
-                    api_url = hf_api.build_api_url(kind, repo_id)
-                    data = hf_api.fetch_json(api_url, token=None)
-
-                    # Build JSON record
-                    record = {
-                        "url": url,
-                        "kind": kind,
-                        "repo_id": repo_id,
-                        "api_url": api_url,
-                        "downloads": data.get("downloads"),
-                        "pipeline_tag": data.get("pipeline_tag"),
-                        "lastModified": data.get("lastModified"),
-                    }
-
-                    # Print one JSON object per line
-                    print(json.dumps(record))
+                    if checkURL(url):
+                        modelScore = ScoreCard()
+                        modelScore.setTotalScore()
+                        modelScore.printTotalScore()
+                        modelScore.printSubscores()
 
                 except Exception as e:
                     error_record = {
