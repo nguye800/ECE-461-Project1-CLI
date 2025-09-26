@@ -1,14 +1,14 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from Metric import Metric
+from src.classes.Metric import Metric
 
 @dataclass
 class Size(Metric):
     def __init__(self, metricName="Size", metricWeighting=0.1, sizeScore=0.0):
         super().__init__(metricName, 0, metricWeighting)
         self.sizeScore = sizeScore
-        self.modelSizeGB = 0.0  # keep track of raw GB size
+        self.modelSizeGB = 0.0
 
     def setSize(self, file_sizes: list[int]):
         """
@@ -19,11 +19,9 @@ class Size(Metric):
             self.sizeScore = 0.0
             return
 
-        # Convert total size from bytes → GB
         total_size_bytes = sum(file_sizes)
         self.modelSizeGB = total_size_bytes / (1024.0 ** 3)
 
-        # Apply rubric
         if self.modelSizeGB < 1:
             self.sizeScore = 1.0
         elif self.modelSizeGB < 10:

@@ -1,10 +1,11 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from Metric import Metric
-from utils.llm_api import llmAPI
+from src.classes.Metric import Metric
+from src.utils.llm_api import llmAPI
 
 @dataclass
+
 class RampUpTime(Metric):
     def __init__(self, metricName="Ramp Up Time", metricWeighting=0.1, rampUpTime=0.0):
         super().__init__(metricName, 0, metricWeighting)
