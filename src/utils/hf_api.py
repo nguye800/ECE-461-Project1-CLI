@@ -76,10 +76,8 @@ class hfAPI():
     def build_api_url(self, kind: str, repo_id: str) -> str:
         if kind == "model":
             return f"https://huggingface.co/api/models/{repo_id}"
-        elif kind == "dataset":
-            return f"https://huggingface.co/api/datasets/{repo_id}"
         else:
-            raise ValueError(f"Unknown kind '{kind}'. Expected 'model' or 'dataset'.")
+            raise ValueError(f"Unknown kind '{kind}'. Expected 'model'.")
 
 
     def fetch_json(self, api_url: str):
