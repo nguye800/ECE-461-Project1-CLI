@@ -36,11 +36,11 @@ class ScoreCard:
     
     def printSubscore(self):
         print("Submetric Scores: \n" \
-        f"Size: {self.size.getMetricScore() * self.size.getWeighting()}\n" \
-        f"License: {self.license.getMetricScore() * self.license.getWeighting()}\n" \
-        f"Ramp Up Time: {self.rampUpTime.getMetricScore() * self.rampUpTime.getWeighting()}\n" \
-        f"Bus Factor: {self.busFactor.getMetricScore() * self.busFactor.getWeighting()}\n" \
-        f"Available Dataset and Code Score: {self.availableDatasetandCode.getMetricScore() * self.availableDatasetandCode.getWeighting()}\n" \
-        f"Dataset Quality: {self.datasetQuality.getMetricScore() * self.datasetQuality.getWeighting()}\n" \
-        f"Code Quality: {self.codeQuality.getMetricScore() * self.codeQuality.getWeighting()}\n" \
-        f"Performance Claims: {self.performanceClaims.getMetricScore() * self.performanceClaims.getWeighting()}\n")
+        f"Size: {self.size.getMetricScore()}\n" \
+        f"License: {self.license.getMetricScore()}\n" \
+        f"Ramp Up Time: {self.rampUpTime.getMetricScore()}\n" \
+        f"Bus Factor: {self.busFactor.getMetricScore()}\n" \
+        f"Available Dataset and Code Score: {self.availableDatasetandCode.getMetricScore()}\n" \
+        f"Dataset Quality: {self.datasetQuality.getMetricScore()}\n" \
+        f"Code Quality: {self.codeQuality.getMetricScore()}\n" \
+        f"Performance Claims: {self.performanceClaims.getMetricScore()}\n")
