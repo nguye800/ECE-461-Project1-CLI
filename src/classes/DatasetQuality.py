@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from Metric import Metric
 from src.utils.hf_api import get_info
 import math
+import json
 
 @dataclass
 class DatasetQuality(Metric):
@@ -11,27 +12,23 @@ class DatasetQuality(Metric):
         self.datasetShape = datasetShape
         self.datasetEntries = datasetEntries
     
-    def getDatasetInfo(url:str) -> dict:
-        # Fetch the model card JSON as a Python dict
-        modelInfoStr = get_info(url, printCLI=False)  # your get_info function
-        modelInfo = json.loads(modelInfoStr)
     
-        data = modelInfo.get("data", {})
-        cardData = data.get("cardData", {})
-
-        return {
-            "likes": data.get("likes", 0),
-            "downloads": data.get("downloads", 0),
-            "license": cardData.get("license", None)
-        }
-    
-    def computeDatasetQuality(dataset_info: dict) -> float:
+    def computeDatasetQuality(url: str) -> float:
         """
         Compute a dataset quality score between 0 and 1 based on likes, downloads, and license.
         """
-        likes = dataset_info.get("likes", 0)
-        downloads = dataset_info.get("downloads", 0)
-        license_str = dataset_info.get("license", None)
+        # Fetch model card JSON
+        modelInfoStr = get_info(url, printCLI=False)  # assuming get_info is imported
+        modelInfo = json.loads(modelInfoStr)
+
+        data = modelInfo.get("data", {})
+        cardData = data.get("cardData", {})
+
+        # Extract relevant fields
+        likes = data.get("likes", 0)
+        downloads = data.get("downloads", 0)
+        license_str = cardData.get("license", None)
+
 
         # Weak signal: popularity / community validation
         likes_score = math.log(likes + 1) / math.log(5000 + 1)  # normalize roughly
