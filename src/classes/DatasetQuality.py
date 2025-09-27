@@ -1,7 +1,8 @@
 from __future__ import annotations
 from dataclasses import dataclass
 from Metric import Metric
-from huggingface_hub import dataset_info
+from src.utils.hf_api import get_info
+import math
 
 @dataclass
 class DatasetQuality(Metric):
@@ -9,39 +10,47 @@ class DatasetQuality(Metric):
         super().__init__(metricName, 0, metricWeighting)
         self.datasetShape = datasetShape
         self.datasetEntries = datasetEntries
-        
-    def getDatasetShape(self) -> tuple:
-        return self.datasetShape
-
-    def getDatsetEntries(self) -> int:
-        return self.datasetEntries
     
-    def evaluate(self, dataset_id: str) -> float:
-        """Check quality of dataset via downloads, likes, and size."""
-        try:
-            info = dataset_info(dataset_id)
+    def getDatasetInfo(url:str) -> dict:
+        # Fetch the model card JSON as a Python dict
+        modelInfoStr = get_info(url, printCLI=False)  # your get_info function
+        modelInfo = json.loads(modelInfoStr)
+    
+        data = modelInfo.get("data", {})
+        cardData = data.get("cardData", {})
 
-            downloads = getattr(info, "downloads", 0)
-            likes = getattr(info, "likes", 0)
-            license_ = getattr(info, "license", None)
+        return {
+            "likes": data.get("likes", 0),
+            "downloads": data.get("downloads", 0),
+            "license": cardData.get("license", None)
+        }
+    
+    def computeDatasetQuality(dataset_info: dict) -> float:
+        """
+        Compute a dataset quality score between 0 and 1 based on likes, downloads, and license.
+        """
+        likes = dataset_info.get("likes", 0)
+        downloads = dataset_info.get("downloads", 0)
+        license_str = dataset_info.get("license", None)
 
-            # heuristic scoring
-            score = 0.0
-            if downloads > 1000:
-                score += 0.4
-            elif downloads > 100:
-                score += 0.2
+        # Weak signal: popularity / community validation
+        likes_score = math.log(likes + 1) / math.log(5000 + 1)  # normalize roughly
+        
+        # Proxy for dataset usefulness / adoption
+        downloads_score = math.log(downloads + 1) / math.log(1000000 + 1)
+        
+        # License quality: open > restricted > unknown
+        if license_str is None:
+            license_score = 0.2
+        elif any(x in license_str.lower() for x in ["mit","apache","cc0","cc-by"]):
+            license_score = 1.0
+        elif "research" in license_str.lower():
+            license_score = 0.8
+        else:
+            license_score = 0.5
 
-            if likes > 50:
-                score += 0.3
-            elif likes > 10:
-                score += 0.15
+        # Weighted sum
+        total_score = 0.3 * likes_score + 0.4 * downloads_score + 0.3 * license_score
 
-            if license_ is not None:
-                score += 0.3
-
-            self.score = min(1.0, score)
-        except Exception:
-            self.score = 0.0
-
-        return self.score
+        # Clamp between 0 and 1
+        return round(min(total_score, 1.0), 3)
