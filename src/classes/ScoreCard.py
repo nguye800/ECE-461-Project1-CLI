@@ -34,7 +34,7 @@ class ScoreCard:
     def printTotalScore(self):
         print(f"Overall Score: {self.totalScore}")
     
-    def printSubscore(self):
+    def printSubscores(self):
         print("Submetric Scores: \n" \
         f"Size: {self.size.getMetricScore()}\n" \
         f"License: {self.license.getMetricScore()}\n" \
