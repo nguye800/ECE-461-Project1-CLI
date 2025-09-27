@@ -3,7 +3,7 @@
 import os, re
 from urllib.parse import urlparse
 from collections import Counter
-from huggingface_hub import HfApi
+from huggingface_hub import HfApi, ModelCard
 from huggingface_hub.utils import HfHubHTTPError
 import statistics
 from dotenv import load_dotenv, dotenv_values
@@ -70,22 +70,40 @@ def getCollaborators(hf_url: str, n: int = 100, branch: str | None = None) -> in
 
     return average, std, authors
 
-_GH_LINK_RE = re.compile(r"https?://(?:www\.)?github\.com/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+", re.I)
+# Regex to capture GitHub repo links
+GITHUB_URL_RE = re.compile(
+    r"https?://(?:www\.)?github\.com/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+",
+    re.IGNORECASE,
+)
 
-def find_github_links(model_id: str):
+def find_github_links(url):
     api = HfApi()
-    readme = getattr(api.model_card(model_id), "text", None) or api.model_card(model_id).content
+    model_id = _repo_id_from_url(url)
+
+    # 1. Get model info (includes cardData)
     info = api.model_info(model_id)
-    def walk(x):
-        if isinstance(x, dict):
-            for v in x.values(): yield from walk(v)
-        elif isinstance(x, list):
-            for v in x: yield from walk(v)
-        elif isinstance(x, str):
-            yield x
-    from_readme = set(_GH_LINK_RE.findall(readme or ""))
-    from_yaml = set(_GH_LINK_RE.findall("\n".join(walk(getattr(info, "cardData", {}) or {}))))
-    return sorted(from_readme | from_yaml)
+    links = set()
+
+    # From cardData if present
+    if getattr(info, "cardData", None):
+        def walk(obj):
+            if isinstance(obj, dict):
+                for v in obj.values():
+                    yield from walk(v)
+            elif isinstance(obj, list):
+                for v in obj:
+                    yield from walk(v)
+            elif isinstance(obj, str):
+                if "github.com" in obj:
+                    yield obj
+        links.update(walk(info.cardData))
+
+    # 2. Get README text and scan for links
+    card = ModelCard.load(model_id)
+    readme = card.text if hasattr(card, "text") else card.content
+    links.update(GITHUB_URL_RE.findall(readme))
+
+    return list(links)
 
 # --- Last-N commit authors from a GitHub repo (no token) ---
 _BOT_RE = re.compile(r"(?:\[(?:bot)\]|bot$|^dependabot|^github-actions)", re.I)
@@ -140,11 +158,26 @@ def get_collaborators_github(github_url: str, n: int = 100, branch: str | None =
     return average, std, authors
 
 if __name__ == "__main__":
-    url = "https://huggingface.co/google-bert/bert-base-uncased"
-    avg, std, authors = getCollaborators(url, n=100)
-    if avg == -1 or std == -1 or authors == -1:
-        print("Unable to access Repo")
-    else:
-        print("Unique collaborators (last 100):", len(authors))
-        print("Average percentage of commits by individuals: ", avg)
-        print("Standard deviation of commit percentage by individuals: ", std)
+    # # test access token
+    hfurl = "https://huggingface.co/google-bert/bert-base-uncased"
+    # avg, std, authors = getCollaborators(url, n=100)
+    # if avg == -1 or std == -1 or authors == -1:
+    #     print("Unable to access Repo")
+    # else:
+    #     print("Unique collaborators (last 100):", len(authors))
+    #     print("Average percentage of commits by individuals: ", avg)
+    #     print("Standard deviation of commit percentage by individuals: ", std)
+
+    github_url = "https://github.com/huggingface/transformers"
+    avg, std, authors = get_collaborators_github(github_url, n=100)
+    print("Unique collaborators (last 100):", len(authors))
+    print("Average percentage of commits by individuals: ", avg)
+    print("Standard deviation of commit percentage by individuals: ", std)
+
+    print(find_github_links(hfurl))
+    
+
+    # bf = BusFactor()
+    # bf.setNumContributors(github_url)
+    # print("Num contributors: ", bf.getNumContributors())
+    # print("Metric Score: ", bf.getMetricScore())

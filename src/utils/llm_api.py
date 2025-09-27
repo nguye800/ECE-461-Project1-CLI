@@ -51,4 +51,12 @@ class llmAPI():
 
 if __name__ == "__main__":
     apiTester = llmAPI()
-    print(apiTester.main("Please give me a list of assessment areas that make good quality code"))
+    hfurl = "https://huggingface.co/google-bert/bert-base-uncased"
+    prompt = "Given this link to a HuggingFace model repository, can you assess the Bus Factor of the model based on size of the organization/members \
+                and likelihood that the work for developing this model was evenly split but all contributors. \
+                I would like you to return a single value from 0-1 with 1 being perfect bus factor and no risk involved, and 0 being one singular contributor doing all the work. \
+                This response should just be the 0-1 value with no other text given."
+    
+    print(apiTester.main(f"URL: {hfurl}, instructions: {prompt}"))
+    
+    # print(apiTester.main("Please give me a list of assessment areas that make good quality code"))
