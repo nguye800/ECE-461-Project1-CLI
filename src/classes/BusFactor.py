@@ -31,7 +31,8 @@ class BusFactor(Metric):
             content = response["choices"][0]["message"]["content"]
             match = re.search(r"[-+]?\d*\.\d+|\d+", content)
             bus_factor = float(match.group()) if match else None
-            self.metricScore = bus_factor
+            if bus_factor:
+                self.metricScore = bus_factor
 
     def getNumContributors(self) -> int:
         return self.NumContributors
