@@ -33,7 +33,7 @@ def main():
         for url in urls:
             if checkURL(url):
                 try:
-                    modelScore = ScoreCard()
+                    modelScore = ScoreCard(url)
                     modelScore.setTotalScore()
                     modelScore.printTotalScore()
                     modelScore.printSubscores()
