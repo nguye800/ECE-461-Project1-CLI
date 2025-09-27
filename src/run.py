@@ -4,6 +4,7 @@ import sys
 import json
 from src.utils.check_url import checkURL
 from src.classes.ScoreCard import ScoreCard
+from src.utils.run_tests import run_testsuite
 
 def main():
     if len(sys.argv) < 2:
@@ -17,7 +18,7 @@ def main():
 
     elif command == "test":
         print("Running tests... (placeholder)")
-        # hook into pytest/unittest later
+        run_testsuite()
 
     else:
         # assume it's a file with URLs
@@ -30,13 +31,12 @@ def main():
             sys.exit(1)
 
         for url in urls:
-            if "huggingface.co" in url:
+            if checkURL(url):
                 try:
-                    if checkURL(url):
-                        modelScore = ScoreCard()
-                        modelScore.setTotalScore()
-                        modelScore.printTotalScore()
-                        modelScore.printSubscores()
+                    modelScore = ScoreCard()
+                    modelScore.setTotalScore()
+                    modelScore.printTotalScore()
+                    modelScore.printSubscores()
 
                 except Exception as e:
                     error_record = {
