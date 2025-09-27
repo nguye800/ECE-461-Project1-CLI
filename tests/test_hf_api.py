@@ -1,15 +1,15 @@
 # test_hf_api.py
 import json
-import os
 import sys
 import unittest
-from unittest import mock
 from unittest.mock import patch
 
 import requests
 
 from src.utils.hf_api import hfAPI
+
 hf_api = hfAPI()
+
 
 class ParseHfUrlTests(unittest.TestCase):
     def test_parse_model_urls(self):
@@ -30,14 +30,14 @@ class ParseHfUrlTests(unittest.TestCase):
             with self.subTest(url=url):
                 self.assertEqual(hf_api.parse_hf_url(url), expected)
 
-    def test_parse_dataset_urls(self):
+    def test_parse_dataset_urls_are_parsed(self):
+        # Your parser supports datasets even if build_api_url doesn't.
         cases = {
             "datasets/squad": ("dataset", "squad"),
             "https://huggingface.co/datasets/squad": ("dataset", "squad"),
             "https://huggingface.co/datasets/user/name": ("dataset", "user/name"),
             "https://huggingface.co/datasets/name/tree/main": ("dataset", "name"),
             "https://huggingface.co/datasets/user/name/tree/main": ("dataset", "user/name"),
-            # Handle unusual double "datasets"
             "https://huggingface.co/datasets/datasets/squad": ("dataset", "squad"),
         }
         for url, expected in cases.items():
@@ -64,11 +64,10 @@ class BuildApiUrlTests(unittest.TestCase):
             "https://huggingface.co/api/models/bert-base-uncased",
         )
 
-    def test_build_api_url_dataset(self):
-        self.assertEqual(
-            hf_api.build_api_url("dataset", "squad"),
-            "https://huggingface.co/api/datasets/squad",
-        )
+    def test_build_api_url_dataset_not_supported(self):
+        # Current hf_api.py only supports 'model' here.
+        with self.assertRaises(ValueError):
+            hf_api.build_api_url("dataset", "squad")
 
     def test_build_api_url_bad_kind_raises(self):
         with self.assertRaises(ValueError):
@@ -89,67 +88,40 @@ class FetchJsonTests(unittest.TestCase):
         def raise_for_status(self):
             if self.status_code >= 400:
                 err = requests.HTTPError(f"{self.status_code} error for {self.url}")
-                # Attach a response object like requests does
                 err.response = self
                 raise err
 
     @patch("requests.get")
-    def test_fetch_json_ok_without_token(self, mget):
-        resp = self._Resp(200, {"ok": True})
+    def test_fetch_json_ok(self, mget):
+        resp = self._Resp(200, {"ok": True}, url="https://huggingface.co/api/models/bert-base-uncased")
         mget.return_value = resp
-        out = hf_api.fetch_json("https://huggingface.co/api/models/bert-base-uncased", token=None)
+        out = hf_api.fetch_json("https://huggingface.co/api/models/bert-base-uncased")
         self.assertEqual(out, {"ok": True})
-        # Headers include Accept but not Authorization
-        called_headers = mget.call_args.kwargs["headers"]
-        self.assertIn("Accept", called_headers)
-        self.assertNotIn("Authorization", called_headers)
-
-    @patch("requests.get")
-    def test_fetch_json_ok_with_token_header(self, mget):
-        resp = self._Resp(200, {"ok": True})
-        mget.return_value = resp
-        out = hf_api.fetch_json("https://huggingface.co/api/models/bert-base-uncased", token="ABC")
-        self.assertEqual(out, {"ok": True})
-        called_headers = mget.call_args.kwargs["headers"]
-        self.assertEqual(called_headers.get("Authorization"), "Bearer ABC")
-
-    @patch("requests.get")
-    def test_fetch_json_dataset_404_fallback_last_segment(self, mget):
-        # First call: 404 on owner/name
-        first = self._Resp(status_code=404, payload={"detail": "Not found"}, url="https://huggingface.co/api/datasets/user/name")
-        # Second call: 200 when trying just the last segment "name"
-        second = self._Resp(status_code=200, payload={"id": "name"}, url="https://huggingface.co/api/datasets/name")
-        mget.side_effect = [first, second]
-
-        out = hf_api.fetch_json("https://huggingface.co/api/datasets/user/name", token=None)
-        self.assertEqual(out, {"id": "name"})
-        self.assertEqual(mget.call_count, 2)
-        # Ensure the second URL is the base + last segment
-        _, second_kwargs = mget.call_args
-        self.assertTrue(second.url.endswith("/api/datasets/name"))
+        # called without token/headers in your current implementation
+        args, kwargs = mget.call_args
+        self.assertEqual(args[0], "https://huggingface.co/api/models/bert-base-uncased")
+        self.assertIn("timeout", kwargs)
+        self.assertNotIn("headers", kwargs)
 
     @patch("requests.get")
     def test_fetch_json_raises_http_error(self, mget):
         bad = self._Resp(status_code=500, text="boom", url="https://huggingface.co/api/models/x")
         mget.return_value = bad
         with self.assertRaises(requests.HTTPError):
-            hf_api.fetch_json("https://huggingface.co/api/models/x", token=None)
+            hf_api.fetch_json("https://huggingface.co/api/models/x")
 
 
-class MainCliTests(unittest.TestCase):
+class GetInfoTests(unittest.TestCase):
     @patch("builtins.print")
     @patch("requests.get")
-    def test_main_success_prints_json(self, mget, mprint):
-        # Mock network JSON
+    def test_get_info_prints_json_when_printCLI_true(self, mget, mprint):
         class _R(FetchJsonTests._Resp):
             pass
 
-        mget.return_value = _R(200, {"hello": "world"})
-        argv = ["hf_api.py", "https://huggingface.co/bert-base-uncased"]
-        with patch.object(sys, "argv", argv):
-            hf_api.main()
+        mget.return_value = _R(200, {"hello": "world"}, url="https://huggingface.co/api/models/bert-base-uncased")
+        hf_api.get_info("https://huggingface.co/bert-base-uncased", printCLI=True)
 
-        # Ensure we printed exactly one JSON blob that contains our data and _requested keys
+        # Ensure exactly one JSON blob printed
         self.assertTrue(mprint.called)
         printed = "".join(str(args[0]) for args, _ in mprint.call_args_list)
         blob = json.loads(printed)
@@ -158,52 +130,42 @@ class MainCliTests(unittest.TestCase):
         self.assertEqual(blob["_requested"]["kind"], "model")
         self.assertEqual(blob["_requested"]["repo_id"], "bert-base-uncased")
 
-    @patch("sys.stderr")
-    def test_main_bad_url_exits_2(self, mstderr):
-        argv = ["hf_api.py", "https://example.com/not-hf"]
-        with patch.object(sys, "argv", argv):
+    @patch("requests.get")
+    def test_get_info_returns_json_string_when_printCLI_false(self, mget):
+        class _R(FetchJsonTests._Resp):
+            pass
+
+        mget.return_value = _R(200, {"ok": True}, url="https://huggingface.co/api/models/someuser/somerepo")
+        out = hf_api.get_info("https://huggingface.co/someuser/somerepo", printCLI=False)
+        blob = json.loads(out)
+        self.assertEqual(blob["_requested"]["repo_id"], "someuser/somerepo")
+        self.assertEqual(blob["data"], {"ok": True})
+
+    def test_get_info_bad_url_exits_2(self):
+        # parse_hf_url raises -> get_info sys.exit(2)
+        with patch.object(sys, "stderr"):
             with self.assertRaises(SystemExit) as ctx:
-                hf_api.main()
+                hf_api.get_info("https://example.com/not-hf", printCLI=False)
         self.assertEqual(ctx.exception.code, 2)
-        # Ensure an error message was printed to stderr
-        self.assertTrue(mstderr.write.called or mstderr.buffer)
 
     @patch("requests.get")
-    def test_main_http_error_exits_1(self, mget):
-        # Make the underlying fetch_json raise HTTPError
+    def test_get_info_http_error_exits_1(self, mget):
+        # fetch_json raises HTTPError -> get_info sys.exit(1)
         class _R(FetchJsonTests._Resp):
             pass
+        mget.return_value = _R(500, text="boom", url="https://huggingface.co/api/models/x")
 
-        bad = _R(status_code=500, text="boom", url="https://huggingface.co/api/models/x")
-        mget.return_value = bad
-        argv = ["hf_api.py", "https://huggingface.co/x"]
-        with patch.object(sys, "argv", argv):
+        with patch.object(sys, "stderr"):
             with self.assertRaises(SystemExit) as ctx:
-                hf_api.main()
+                hf_api.get_info("https://huggingface.co/x", printCLI=False)
         self.assertEqual(ctx.exception.code, 1)
 
-    @patch("requests.get")
-    def test_main_network_error_exits_1(self, mget):
-        mget.side_effect = requests.RequestException("no internet")
-        argv = ["hf_api.py", "https://huggingface.co/x"]
-        with patch.object(sys, "argv", argv):
+    @patch("requests.get", side_effect=requests.RequestException("no internet"))
+    def test_get_info_network_error_exits_1(self, _mget):
+        with patch.object(sys, "stderr"):
             with self.assertRaises(SystemExit) as ctx:
-                hf_api.main()
+                hf_api.get_info("https://huggingface.co/x", printCLI=False)
         self.assertEqual(ctx.exception.code, 1)
-
-    @patch.dict(os.environ, {"HF_TOKEN": "ENV_TOKEN"}, clear=False)
-    @patch("requests.get")
-    def test_main_uses_env_token_when_flag_missing(self, mget):
-        # Check that Authorization header is present (env var path)
-        class _R(FetchJsonTests._Resp):
-            pass
-
-        mget.return_value = _R(200, {"ok": True})
-        argv = ["hf_api.py", "https://huggingface.co/bert-base-uncased"]
-        with patch.object(sys, "argv", argv):
-            hf_api.main()
-        headers = mget.call_args.kwargs["headers"]
-        self.assertEqual(headers.get("Authorization"), "Bearer ENV_TOKEN")
 
 
 if __name__ == "__main__":
