@@ -13,7 +13,7 @@
 - BusFactor: Web scraper, look at git metadata for hf repo and for the last 200 commits check # of unique contributors by id
 # Eric
 - RampUpTime: Use GenAI studio api, write a prompt to go to the model url's model card page and evaluate ease of use from the perspective of a junior dev
-- Size: use "parameters" value from api
+- Size: Use GenAI studio api to determine the kind of model, then takes "parameters" value from api; uses size of model as backup if no parameters are available
 
 # Shriya
 - ScoreCard: instantiate all submetrics and run scoring functions get to get full score and save submetric and total score values. Add function to print all results to CLI.
