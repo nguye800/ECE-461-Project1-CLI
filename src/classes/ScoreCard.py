@@ -9,6 +9,7 @@ from src.classes.License import License
 from src.classes.PerformanceClaims import PerformanceClaims
 from src.classes.RampUpTime import RampUpTime
 from src.classes.Size import Size
+from src.utils.get_metadata import get_github_readme
 
 @dataclass
 class ScoreCard:
@@ -18,8 +19,11 @@ class ScoreCard:
         self.busFactor.setNumContributors(url)
         self.datasetQuality = DatasetQuality()
         self.size = Size()
+        self.size.setSize([1024 * 1024 * 500])
         self.license = License()
         self.rampUpTime = RampUpTime()
+        readme_text = get_github_readme(url)
+        self.rampUpTime.setRampUpTime(readme_text=readme_text)
         self.performanceClaims = PerformanceClaims()
         self.codeQuality = CodeQuality()
         self.availableDatasetAndCode = AvailableDatasetAndCode()
