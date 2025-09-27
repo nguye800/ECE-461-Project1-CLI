@@ -2,9 +2,8 @@
 
 import sys
 import json
-import src.utils.hf_api as hf_api  # Hugging Face helper
-from utils.check_url import checkURL
-from classes.ScoreCard import ScoreCard
+from src.utils.check_url import checkURL
+from src.classes.ScoreCard import ScoreCard
 
 def main():
     if len(sys.argv) < 2:
