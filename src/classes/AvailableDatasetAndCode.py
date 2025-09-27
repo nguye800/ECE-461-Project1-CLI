@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from Metric import Metric
+from src.classes.Metric import Metric
 
 @dataclass
 class AvailableDatasetAndCode(Metric):
