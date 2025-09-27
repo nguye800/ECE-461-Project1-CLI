@@ -76,35 +76,17 @@ class hfAPI():
     def build_api_url(self, kind: str, repo_id: str) -> str:
         if kind == "model":
             return f"https://huggingface.co/api/models/{repo_id}"
-        elif kind == "dataset":
-            return f"https://huggingface.co/api/datasets/{repo_id}"
         else:
-            raise ValueError(f"Unknown kind '{kind}'. Expected 'model' or 'dataset'.")
+            raise ValueError(f"Unknown kind '{kind}'. Expected 'model'.")
 
 
-    def fetch_json(self, api_url: str, token: str | None):
-        headers = {"Accept": "application/json"}
-        if token:
-            headers["Authorization"] = f"Bearer {token}"
-        resp = requests.get(api_url, headers=headers, timeout=30)
-        # Handle 404 fallbacks for some dataset/model id shapes
-        if resp.status_code == 404 and "/api/datasets/" in api_url and "/" in api_url.rsplit("/", 1)[-1]:
-            # Some datasets collapse owner/name to just name in API; try last path segment only
-            base = api_url.rsplit("/", 1)[0]
-            last = api_url.rsplit("/", 1)[-1].split("/")[-1]
-            alt_url = f"{base}/{last}"
-            resp = requests.get(alt_url, headers=headers, timeout=30)
-        resp.raise_for_status()
-        return resp.json()
+    def fetch_json(self, api_url: str):
+        r = requests.get(api_url, timeout=10)  # no token headers
+        r.raise_for_status()
+        return r.json()
 
     @lru_cache(maxsize=128)
     def get_info(self, url, printCLI=True):
-        parser = argparse.ArgumentParser(description="Inspect a Hugging Face model or dataset via the public API.")
-        parser.add_argument("url", help="URL of the Hugging Face model or dataset (e.g., https://huggingface.co/bert-base-uncased or https://huggingface.co/datasets/squad)")
-        parser.add_argument("--token", help="Hugging Face access token (or set HF_TOKEN env var).", default=None)
-
-        token = os.environ.get("HF_TOKEN")
-
         try:
             kind, repo_id = self.parse_hf_url(url)
         except ValueError as e:
@@ -114,7 +96,7 @@ class hfAPI():
         api_url = self.build_api_url(kind, repo_id)
 
         try:
-            data = self.fetch_json(api_url, token)
+            data = self.fetch_json(api_url)
         except requests.HTTPError as e:
             status = e.response.status_code if e.response is not None else "Unknown"
             detail = e.response.text if e.response is not None else str(e)

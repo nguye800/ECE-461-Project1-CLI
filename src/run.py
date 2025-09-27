@@ -2,7 +2,9 @@
 
 import sys
 import json
-import src.utils.hf_api as hf_api  # Hugging Face helper
+from src.utils.check_url import checkURL
+from src.classes.ScoreCard import ScoreCard
+from src.utils.run_tests import run_testsuite
 
 def main():
     if len(sys.argv) < 2:
@@ -16,7 +18,7 @@ def main():
 
     elif command == "test":
         print("Running tests... (placeholder)")
-        # hook into pytest/unittest later
+        run_testsuite()
 
     else:
         # assume it's a file with URLs
@@ -29,25 +31,12 @@ def main():
             sys.exit(1)
 
         for url in urls:
-            if "huggingface.co" in url:
+            if checkURL(url):
                 try:
-                    kind, repo_id = hf_api.parse_hf_url(url)
-                    api_url = hf_api.build_api_url(kind, repo_id)
-                    data = hf_api.fetch_json(api_url, token=None)
-
-                    # Build JSON record
-                    record = {
-                        "url": url,
-                        "kind": kind,
-                        "repo_id": repo_id,
-                        "api_url": api_url,
-                        "downloads": data.get("downloads"),
-                        "pipeline_tag": data.get("pipeline_tag"),
-                        "lastModified": data.get("lastModified"),
-                    }
-
-                    # Print one JSON object per line
-                    print(json.dumps(record))
+                    modelScore = ScoreCard()
+                    modelScore.setTotalScore()
+                    modelScore.printTotalScore()
+                    modelScore.printSubscores()
 
                 except Exception as e:
                     error_record = {

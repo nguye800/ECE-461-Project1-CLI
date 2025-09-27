@@ -1,7 +1,6 @@
 from __future__ import annotations
 from dataclasses import dataclass
-from Metric import Metric
-from huggingface_hub import model_info
+from src.classes.Metric import Metric
 
 @dataclass
 class AvailableDatasetAndCode(Metric):
