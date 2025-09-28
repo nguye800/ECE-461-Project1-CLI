@@ -59,7 +59,7 @@ def run_testsuite() -> int:
 
     # Summary line
     print("\n" + "-" * 60)
-    print(f"{passed}/{total_run} tests passed — {total_percent:.2f}% line coverage")
+    print(f"{passed}/{total_run} test cases passed. {total_percent:.2f}% line coverage achieved.")
     if n_skip or n_xfail:
         print(f"(skipped: {n_skip}, expected failures: {n_xfail})")
     if n_fail or n_err or n_unexp:
