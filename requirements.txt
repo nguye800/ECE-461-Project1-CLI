@@ -3,4 +3,3 @@ requests
 huggingface_hub
 dotenv
 coverage
-python
