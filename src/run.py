@@ -74,6 +74,7 @@ def main():
                     modelScore.setTotalScore()
                     modelScore.printTotalScore()
                     modelScore.printSubscores()
+                    exit(0)
 
                 except Exception as e:
                     error_record = {
