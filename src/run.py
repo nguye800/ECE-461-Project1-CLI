@@ -72,10 +72,18 @@ def main():
             print(f"Error: could not find file '{url_file}'", file=sys.stderr)
             sys.exit(1)
 
+        recentGhURL = None
+        recentDatasetURL = None
         for url in urls:
             if checkURL(url):
                 try:
                     modelScore = ScoreCard(url)
+                    
+                    if recentDatasetURL:
+                        modelScore.setDatasetURL(recentDatasetURL)
+                    if recentGhURL:
+                        modelScore.setGithubURL(recentGhURL)
+
                     modelScore.setTotalScore()
                     modelScore.printScores()
 
@@ -90,12 +98,10 @@ def main():
                     # log_exception(e)
             else:
                 # Non-HF URLs (GitHub, etc.) handled later
-                record = {
-                    "url": url,
-                    "kind": "unknown",
-                    "note": "not Hugging Face, skipping for now"
-                }
-                # print(json.dumps(record))
+                if "dataset" in url:
+                    recentDatasetURL = url
+                elif "github" in url:
+                    recentGhURL = url
         sys.exit(0)
 
 if __name__ == "__main__":

@@ -54,7 +54,7 @@ class DatasetQuality(Metric):
 
         return round(min(total_score, 1.0), 3)
 
-    def computeDatasetQuality(self, url: str) -> float:
+    def computeDatasetQuality(self, url: str) -> Tuple[float, int]:
         """
         For a Hugging Face model URL:
         - Find dataset links mentioned in the model card
@@ -64,7 +64,7 @@ class DatasetQuality(Metric):
         t0 = time.perf_counter_ns()
         dataset_links = find_dataset_links(url)
         if not dataset_links:
-            return 0.0
+            return 0.0, 0
 
         scores = []
         api = hfAPI()

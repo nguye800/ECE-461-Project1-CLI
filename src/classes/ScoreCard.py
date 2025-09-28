@@ -39,6 +39,12 @@ class ScoreCard:
         self.availableDatasetAndCode = AvailableDatasetAndCode()
         self.availableDatasetAndCode.metricScore, self.availableDatasetAndCode.metricLatency = self.availableDatasetAndCode.score_dataset_and_code_availability(url)
         self.latency = (time.perf_counter_ns() - t0) // 1_000_000
+
+    def setGithubURL(self, url):
+        self.githubURL = url
+    
+    def setDatasetURL(self, url):
+        self.datasetURL = url
     
     def getName(self, url: str) -> str:
         p = urlparse(url)
