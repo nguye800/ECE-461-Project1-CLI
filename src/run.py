@@ -44,7 +44,7 @@ def main():
             sys.exit(0)
         except Exception as e:
             print(f"[install] failed: {e}", file=sys.stderr)
-            sys.exit(-1)
+            sys.exit(1)
 
     elif command == "test":
         print("Running tests...")
@@ -55,7 +55,7 @@ def main():
             exit(0)
         except Exception as e:
             print(f"[tests] failed: {e}", file=sys.stderr)
-            sys.exit(-1)
+            sys.exit(1)
 
     else:
         # assume it's a file with URLs
@@ -78,14 +78,15 @@ def main():
                     modelScore = ScoreCard(url)
                     modelScore.setTotalScore()
                     modelScore.printScores()
-                    exit(0)
 
                 except Exception as e:
                     error_record = {
                         "url": url,
                         "error": str(e)
                     }
-                    # print(json.dumps(error_record), file=sys.stderr)
+                    print(json.dumps(error_record), file=sys.stderr)
+                    sys.exit(1)
+                    
                     # log_exception(e)
             else:
                 # Non-HF URLs (GitHub, etc.) handled later
@@ -95,6 +96,7 @@ def main():
                     "note": "not Hugging Face, skipping for now"
                 }
                 # print(json.dumps(record))
+        sys.exit(0)
 
 if __name__ == "__main__":
     main()
