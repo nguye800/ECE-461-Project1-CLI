@@ -10,6 +10,7 @@ from src.classes.PerformanceClaims import PerformanceClaims
 from src.classes.RampUpTime import RampUpTime
 from src.classes.Size import Size
 from src.utils.get_metadata import get_github_readme
+from src.utils.get_metadata import get_model_metadata
 import time
 
 @dataclass
@@ -22,7 +23,8 @@ class ScoreCard:
         self.datasetQuality = DatasetQuality()
         self.datasetQuality.metricScore, self.datasetQuality.metricLatency = self.datasetQuality.computeDatasetQuality(url)
         self.size = Size()
-        self.size.setSize(url)
+        param_count, file_sizes, model_type = get_model_metadata(url)
+        self.size.setSize(file_sizes=file_sizes, param_count=param_count, model_type=model_type)        
         self.license = License()
         self.license.metricScore, self.license.metricLatency = self.license.evaluate(url)
         self.rampUpTime = RampUpTime()
