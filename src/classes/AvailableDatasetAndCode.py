@@ -2,6 +2,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from src.classes.Metric import Metric
 from src.utils.get_metadata import find_dataset_links, find_github_links
+import time
 
 @dataclass
 class AvailableDatasetAndCode(Metric):
@@ -63,8 +64,10 @@ class AvailableDatasetAndCode(Metric):
         - If neither available, score = 0.0
         - Otherwise returns a value in between
         """
+        t0 = time.perf_counter_ns()
         dataset_score = self.score_dataset_availability(url)
         code_score = self.score_code_availability(url)
 
         total_score = 0.5 * dataset_score + 0.5 * code_score
-        return round(total_score, 3)
+        dt_ms = (time.perf_counter_ns() - t0) // 1_000_000
+        return round(total_score, 3), dt_ms

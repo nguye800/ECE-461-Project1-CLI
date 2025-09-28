@@ -3,9 +3,9 @@ from __future__ import annotations
 from dataclasses import dataclass
 from src.classes.Metric import Metric
 from src.utils.llm_api import llmAPI
+import time
 
 @dataclass
-
 class RampUpTime(Metric):
     def __init__(self, metricName="Ramp Up Time", metricWeighting=0.1):
         super().__init__(metricName, 0, metricWeighting)
@@ -45,10 +45,13 @@ class RampUpTime(Metric):
         - precomputed_score (manual value for testing), or
         - raw readme_text (evaluated by LLM).
         """
+        t0 = time.perf_counter_ns()
         if readme_text:
             self.metricScore = self._score_readme_with_llm(readme_text)
         else:
             self.metricScore = 0.0
+        dt_ms = (time.perf_counter_ns() - t0) // 1_000_000
+        self.metricLatency = dt_ms
 
     def getRampUpTime(self) -> float:
         return self.metricScore

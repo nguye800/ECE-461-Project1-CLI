@@ -73,6 +73,7 @@ class License(Metric):
         return 0.3
 
     def evaluate(self, url) -> float:
+        t0 = time.perf_counter_ns()
         api = hfAPI()
         response = api.get_info(url, printCLI=False)
         try:
@@ -119,4 +120,5 @@ class License(Metric):
             self.license = score
             self.metricScore = score
 
-        return score
+        dt_ms = (time.perf_counter_ns() - t0) // 1_000_000
+        return score, dt_ms

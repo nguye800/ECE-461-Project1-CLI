@@ -6,6 +6,7 @@ from src.utils.get_metadata import get_collaborators_github, find_github_links
 from src.utils.llm_api import llmAPI
 import math
 import re
+import time
 
 @dataclass
 class BusFactor(Metric):
@@ -13,6 +14,7 @@ class BusFactor(Metric):
         super().__init__(metricName, 0, metricWeighting)
 
     def setNumContributors(self, url):
+        t0 = time.perf_counter_ns()
         links = find_github_links(url)
         if links:
             avg, std, authors = get_collaborators_github(links[0], n=200)
@@ -28,11 +30,12 @@ class BusFactor(Metric):
                 I would like you to return a single value from 0-1 with 1 being perfect bus factor and no risk involved, and 0 being one singular contributor doing all the work. \
                 This response should just be the 0-1 value with no other text given."
             response = api.main(f"URL: {url}, instructions: {prompt}")
-            content = response["choices"][0]["message"]["content"]
-            match = re.search(r"[-+]?\d*\.\d+|\d+", content)
+            match = re.search(r"[-+]?\d*\.\d+|\d+", response)
             bus_factor = float(match.group()) if match else None
             if bus_factor:
                 self.metricScore = round(bus_factor, 3)
+
+        self.metricLatency = (time.perf_counter_ns() - t0) // 1_000_000
 
     def getNumContributors(self) -> int:
         return self.NumContributors

@@ -10,28 +10,31 @@ from src.classes.PerformanceClaims import PerformanceClaims
 from src.classes.RampUpTime import RampUpTime
 from src.classes.Size import Size
 from src.utils.get_metadata import get_github_readme
+import time
 
 @dataclass
 class ScoreCard:
     def __init__(self, url):
+        t0 = time.perf_counter_ns()
         # Each metric is a field; defaults provided so you can construct empty and fill later
         self.busFactor = BusFactor()
         self.busFactor.setNumContributors(url)
         self.datasetQuality = DatasetQuality()
-        self.datasetQuality.metricScore = self.datasetQuality.computeDatasetQuality(url)
+        self.datasetQuality.metricScore, self.datasetQuality.metricLatency = self.datasetQuality.computeDatasetQuality(url)
         self.size = Size()
         self.size.setSize(url)
         self.license = License()
-        self.license.metricScore = self.license.evaluate(url)
+        self.license.metricScore, self.license.metricLatency = self.license.evaluate(url)
         self.rampUpTime = RampUpTime()
         readme_text = get_github_readme(url)
         self.rampUpTime.setRampUpTime(readme_text=readme_text)
         self.performanceClaims = PerformanceClaims()
-        self.performanceClaims.metricScore = self.performanceClaims.evaluate(url)
+        self.performanceClaims.metricScore, self.performanceClaims.metricLatency = self.performanceClaims.evaluate(url)
         self.codeQuality = CodeQuality()
-        self.codeQuality.metricScore = self.codeQuality.evaluate(url)
+        self.codeQuality.metricScore, self.codeQuality.metricLatency = self.codeQuality.evaluate(url)
         self.availableDatasetAndCode = AvailableDatasetAndCode()
-        self.availableDatasetAndCode.metricScore = self.availableDatasetAndCode.score_dataset_and_code_availability(url)
+        self.availableDatasetAndCode.metricScore, self.availableDatasetAndCode.metricLatency = self.availableDatasetAndCode.score_dataset_and_code_availability(url)
+        self.latency = (time.perf_counter_ns() - t0) // 1_000_000
 
     def setTotalScore(self):
         self.totalScore = 0
@@ -47,17 +50,29 @@ class ScoreCard:
 
     def getTotalScore(self) -> float:
         return self.totalScore
+    
+    def getLatency(self) -> int:
+        return self.latency
 
     def printTotalScore(self):
-        print(f"Overall Score: {self.totalScore}")
+        print(f"net_score {self.totalScore}\n"\
+              f"net_score_latency {self.latency}")
     
     def printSubscores(self):
         print("Submetric Scores: \n" \
         f"size_score {self.size.getMetricScore()}\n" \
+        f"size_score_latency {self.size.getLatency()}\n" \
         f"license {self.license.getMetricScore()}\n" \
+        f"license_latency {self.license.getLatency()}\n" \
         f"ramp_up_time {self.rampUpTime.getMetricScore()}\n" \
+        f"ramp_up_time_latency {self.rampUpTime.getLatency()}\n" \
         f"bus_factor {self.busFactor.getMetricScore()}\n" \
+        f"bus_factor_latency {self.busFactor.getLatency()}\n" \
         f"dataset_and_code_score {self.availableDatasetAndCode.getMetricScore()}\n" \
+        f"dataset_and_code_score_latency {self.availableDatasetAndCode.getLatency()}\n" \
         f"dataset_quality {self.datasetQuality.getMetricScore()}\n" \
+        f"dataset_quality_latency {self.datasetQuality.getLatency()}\n" \
         f"code_quality {self.codeQuality.getMetricScore()}\n" \
-        f"performance_claims {self.performanceClaims.getMetricScore()}\n")
+        f"code_quality_latency {self.codeQuality.getLatency()}\n" \
+        f"performance_claims {self.performanceClaims.getMetricScore()}\n"\
+        f"performance_claims_latency {self.performanceClaims.getLatency()}\n")

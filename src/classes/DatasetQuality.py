@@ -6,6 +6,7 @@ from src.utils.get_metadata import find_dataset_links
 import re
 import math
 import json
+import time
 
 @dataclass
 class DatasetQuality(Metric):
@@ -60,6 +61,7 @@ class DatasetQuality(Metric):
         - Compute quality scores for each dataset
         - Return an aggregated score (average across datasets)
         """
+        t0 = time.perf_counter_ns()
         dataset_links = find_dataset_links(url)
         if not dataset_links:
             return 0.0
@@ -73,9 +75,11 @@ class DatasetQuality(Metric):
             scores.append(score)
 
         if not scores:
-            return 0.0
+            dt_ms = (time.perf_counter_ns() - t0) / 1_000_000
+            return 0.0, dt_ms
 
         # Aggregate: average across datasets
-        return round(sum(scores) / len(scores), 3)     
+        dt_ms = (time.perf_counter_ns() - t0) // 1_000_000
+        return round(sum(scores) / len(scores), 3), dt_ms
 
         

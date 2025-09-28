@@ -6,7 +6,6 @@ from src.utils.hf_api import hfAPI
 
 def checkURL(url):
     if "github" in url or "datasets" in url:
-        print("Please give model URL")
         return False
     else:
         api = hfAPI()

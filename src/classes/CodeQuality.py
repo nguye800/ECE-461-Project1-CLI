@@ -8,6 +8,7 @@ import time
 from src.classes.Metric import Metric
 from src.utils.llm_api import llmAPI
 from src.utils.get_metadata import find_github_links
+import re
 
 _PROMPT = """You are evaluating CODE QUALITY (style & maintainability).
 Consider consistency, naming, modularity, comments/docstrings, type hints, tests/CI hints, and readability.
@@ -29,18 +30,17 @@ class CodeQuality(Metric):
 
     #computing code quality score and returns score and latency 
     def evaluate(self, url) -> float:
+        t0 = time.perf_counter_ns()
         links = find_github_links(url)
         if links:
             prompt = _PROMPT + str(links)
             response = self.llm.main(prompt)
-            if "1.0" in response:
-                score = 1.0
-            elif "0.5" in response:
-                score = 0.5
-            else:
-                score = 0.0
+            PAT = re.compile(r'\b(?:1\.0|0\.5|0\.0)\b')
+            match = re.search(PAT, response)
+            score = float(match.group()) if match else None
         else:
-            print("cant find github links")
+            # print("cant find github links")
             score = 0.0
         score = max(0.0, min(1.0, float(score)))
-        return score
+        dt_ms = (time.perf_counter_ns() - t0) // 1_000_000
+        return score, dt_ms

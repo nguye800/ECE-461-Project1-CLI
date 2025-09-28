@@ -5,6 +5,8 @@ from src.classes.Metric import Metric
 from src.utils.llm_api import llmAPI
 from src.utils.hf_api import hfAPI
 import json
+import time
+import re
 
 @dataclass
 class Size(Metric):
@@ -32,15 +34,15 @@ class Size(Metric):
 
         try:
             response_text = self.llm.main(prompt)
-            if "1.0" in response_text:
-                return 1.0
-            elif "0.5" in response_text:
-                return 0.5
-            elif "0.0" in response_text:
+            PAT = re.compile(r'\b(?:1\.0|0\.5|0\.0)\b')
+            match = re.search(PAT, response_text)
+            score = float(match.group()) if match else None
+            if score:
+                return score
+            else:
                 return 0.0
         except Exception as e:
             print(f"[Size Metric] LLM scoring failed, falling back. Error: {e}")
-        return None
 
     def setSize(self, url):
         """
@@ -48,6 +50,7 @@ class Size(Metric):
         - If LLM available → ask it to contextualize.
         - Else fallback to rule-based thresholds.
         """
+        t0 = time.perf_counter_ns()
         api = hfAPI()
         response = json.loads(api.get_info(url, printCLI=False))
 
@@ -60,6 +63,8 @@ class Size(Metric):
             self.paramCount = parameter_size
         else:
             self.metricScore = 0.0
+            dt_ms = (time.perf_counter_ns() - t0) // 1_000_000
+            self.metricLatency = dt_ms
             return
 
         score = self._score_with_llm(url, self.paramCount)
@@ -67,7 +72,9 @@ class Size(Metric):
             self.metricScore = score
         else:
             self.metricScore = 0.0
-        return
+
+        dt_ms = (time.perf_counter_ns() - t0) // 1_000_000
+        self.metricLatency = dt_ms
 
     def getSize(self) -> float:
         return self.metricScore
