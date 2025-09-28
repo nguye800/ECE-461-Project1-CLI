@@ -78,6 +78,32 @@ GITHUB_URL_RE = re.compile(
     re.IGNORECASE,
 )
 
+def get_model_metadata(url: str):
+    """
+    Retrieve parameter count, file sizes, and model type for a Hugging Face model.
+    Returns (param_count, file_sizes, model_type).
+    """
+    api = HfApi()
+    model_id = url.split("huggingface.co/")[-1]
+
+    info = api.model_info(model_id)
+
+    param_count = None
+    if hasattr(info, "cardData") and info.cardData:
+        param_count = info.cardData.get("parameters")
+
+    file_sizes = []
+    if hasattr(info, "siblings"):
+        for f in info.siblings:
+            if hasattr(f, "size") and f.size:
+                file_sizes.append(f.size)
+
+    model_type = "general"
+    if hasattr(info, "pipeline_tag") and info.pipeline_tag:
+        model_type = info.pipeline_tag
+
+    return param_count, file_sizes, model_type
+
 def find_github_links(url):
     api = HfApi()
     model_id = _repo_id_from_url(url)
