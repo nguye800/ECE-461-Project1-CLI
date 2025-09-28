@@ -107,6 +107,43 @@ def find_github_links(url):
 
     return list(links)
 
+# Regex for HF dataset links
+DATASET_URL_RE = re.compile(r"https?://huggingface\.co/datasets/[A-Za-z0-9_.\-]+/[A-Za-z0-9_.\-]+")
+
+def find_dataset_links(url: str):
+    api = HfApi()
+    model_id = repo_id_from_url(url)
+
+    info = api.model_info(model_id)
+    links = set()
+
+    # 1. From cardData if present
+    if getattr(info, "cardData", None):
+        def walk(obj):
+            if isinstance(obj, dict):
+                for v in obj.values():
+                    yield from walk(v)
+            elif isinstance(obj, list):
+                for v in obj:
+                    yield from walk(v)
+            elif isinstance(obj, str):
+                if "huggingface.co/datasets" in obj:
+                    yield obj
+        links.update(walk(info.cardData))
+
+    # 2. From top-level API metadata (HF sometimes provides this directly)
+    if hasattr(info, "datasets") and info.datasets:
+        for ds in info.datasets:
+            if isinstance(ds, str):
+                links.add(f"https://huggingface.co/datasets/{ds}")
+
+    # 3. From README text (ModelCard)
+    card = ModelCard.load(model_id)
+    readme = getattr(card, "text", getattr(card, "content", ""))
+    links.update(DATASET_URL_RE.findall(readme))
+
+    return list(links)
+
 def get_github_readme(github_url: str) -> str:
     """
     Fetch README.md content from a GitHub repo using the GitHub REST API.
@@ -130,6 +167,7 @@ def get_github_readme(github_url: str) -> str:
     except Exception as e:
         print(f"[get_metadata] ⚠️ Failed to fetch README: {e}")
     return ""
+
 
 # --- Last-N commit authors from a GitHub repo (no token) ---
 _BOT_RE = re.compile(r"(?:\[(?:bot)\]|bot$|^dependabot|^github-actions)", re.I)

@@ -1,7 +1,7 @@
 from __future__ import annotations
 from dataclasses import dataclass
 from Metric import Metric
-from huggingface_hub import model_info
+from src.utils.hf_api import get_info
 
 
 @dataclass
@@ -10,40 +10,28 @@ class PerformanceClaims(Metric):
         super().__init__(metricName, 0, metricWeighting)
         self.benchmarks = benchmarks
         
-    def getBenchmarks(self) -> dict:
-        return self.benchmarks
-    
-    def evaluate(self, model_id: str) -> float:
-        """Check if performance claims (eval results) exist in model-index."""
-        try:
-            info = model_info(model_id)
-            card_data = getattr(info, "cardData", {})
-            model_index = card_data.get("model-index", [])
 
-            if not model_index:
-                self.score = 0.0
-                return self.score
+    def evaluate(self, url: str) -> float:
+        modelinfo = get_info(url)
+        model_index = modelinfo.get("data", {}).get("model-index", None)
+        model_index = modelinfo.get("data", {}).get("model-index", None)
 
-            # Parse metrics (e.g., accuracy, f1, etc.)
-            found_metrics = []
-            for entry in model_index:
-                results = entry.get("results", [])
-                for result in results:
-                    metrics = result.get("metrics", [])
-                    for m in metrics:
-                        metric_name = m.get("type")
-                        metric_value = m.get("value")
-                        if metric_name and metric_value is not None:
-                            found_metrics.append(metric_value)
+        if not model_index:
+            return 0.0  # No performance claims
 
-            if found_metrics:
-                # normalize average metric value to [0,1] (assuming % metrics)
-                avg_score = sum(found_metrics) / len(found_metrics)
-                self.score = min(1.0, avg_score / 100.0)
-            else:
-                self.score = 0.0
+        score = 0.0
+        for entry in model_index:
+            results = entry.get("results", [])
+            for res in results:
+                metrics = res.get("metrics", [])
+                # Count each metric as 1 point
+                score += len(metrics)
+                # Bonus if task and dataset documented
+                if res.get("task"):
+                    score += 1
+                if res.get("dataset"):
+                    score += 1
+        
+        return score
 
-        except Exception:
-            self.score = 0.0
 
-        return self.score
