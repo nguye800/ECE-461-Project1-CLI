@@ -39,17 +39,23 @@ def main():
 
     if command == "install":
         print("Installing dependencies...")
-        subprocess.check_call([sys.executable, "-m", "pip", "install", "-r", "requirements.txt"])
+        try:
+            subprocess.check_call([sys.executable, "-m", "pip", "install", "-r", "requirements.txt"])
+            sys.exit(0)
+        except Exception as e:
+            print(f"[install] failed: {e}", file=sys.stderr)
+            sys.exit(-1)
 
     elif command == "test":
         print("Running tests...")
         test_args = sys.argv[2:]
-        saved_argv = sys.argv[:]          # keep original
         try:
             sys.argv = [sys.argv[0]] + test_args
             run_testsuite()               # now its argparse won't see 'test'
-        finally:
-            sys.argv = saved_argv
+            exit(0)
+        except Exception as e:
+            print(f"[tests] failed: {e}", file=sys.stderr)
+            sys.exit(-1)
 
     else:
         # assume it's a file with URLs

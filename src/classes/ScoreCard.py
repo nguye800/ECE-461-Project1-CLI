@@ -53,11 +53,11 @@ class ScoreCard:
     
     def printSubscores(self):
         print("Submetric Scores: \n" \
-        f"Size: {self.size.getMetricScore()}\n" \
-        f"License: {self.license.getMetricScore()}\n" \
-        f"Ramp Up Time: {self.rampUpTime.getMetricScore()}\n" \
-        f"Bus Factor: {self.busFactor.getMetricScore()}\n" \
-        f"Available Dataset and Code Score: {self.availableDatasetAndCode.getMetricScore()}\n" \
-        f"Dataset Quality: {self.datasetQuality.getMetricScore()}\n" \
-        f"Code Quality: {self.codeQuality.getMetricScore()}\n" \
-        f"Performance Claims: {self.performanceClaims.getMetricScore()}\n")
+        f"size_score {self.size.getMetricScore()}\n" \
+        f"license {self.license.getMetricScore()}\n" \
+        f"ramp_up_time {self.rampUpTime.getMetricScore()}\n" \
+        f"bus_factor {self.busFactor.getMetricScore()}\n" \
+        f"dataset_and_code_score {self.availableDatasetAndCode.getMetricScore()}\n" \
+        f"dataset_quality {self.datasetQuality.getMetricScore()}\n" \
+        f"code_quality {self.codeQuality.getMetricScore()}\n" \
+        f"performance_claims {self.performanceClaims.getMetricScore()}\n")
