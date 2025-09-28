@@ -80,8 +80,8 @@ def main():
                         "url": url,
                         "error": str(e)
                     }
-                    print(json.dumps(error_record), file=sys.stderr)
-                    log_exception(e)
+                    # print(json.dumps(error_record), file=sys.stderr)
+                    # log_exception(e)
             else:
                 # Non-HF URLs (GitHub, etc.) handled later
                 record = {
@@ -89,7 +89,7 @@ def main():
                     "kind": "unknown",
                     "note": "not Hugging Face, skipping for now"
                 }
-                print(json.dumps(record))
+                # print(json.dumps(record))
 
 if __name__ == "__main__":
     main()

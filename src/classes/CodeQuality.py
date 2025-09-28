@@ -37,7 +37,10 @@ class CodeQuality(Metric):
             response = self.llm.main(prompt)
             PAT = re.compile(r'\b(?:1\.0|0\.5|0\.0)\b')
             match = re.search(PAT, response)
-            score = float(match.group()) if match else None
+            if match:
+                score = float(match.group())
+            else:
+                score = 0.0
         else:
             # print("cant find github links")
             score = 0.0
