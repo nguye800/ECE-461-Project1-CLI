@@ -1,8 +1,33 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-cd "$SCRIPT_DIR"
+# always run from the repo root
+cd "$(dirname "$0")"
 
-# Run src/run.py as a module so `from src...` works
-exec python -m src.run "$@"
+# pick a Python (simple + readable)
+PY=python3
+command -v "$PY" >/dev/null 2>&1 || PY=python
+
+if [[ "${1-}" == "install" ]]
+then
+    echo "Installing dependencies..."
+    if [[ -z "${VIRTUAL_ENV:-}" ]]; then
+        # userland install per spec
+        if "$PY" -m pip install --user -r requirements.txt; then
+            exit 0
+        else
+            echo "[install] failed" >&2
+            exit 1
+        fi
+    else
+        if "$PY" -m pip install -r requirements.txt; then
+            exit 0
+        else
+            echo "[install] failed" >&2
+            exit 1
+        fi
+    fi
+else
+    # delegate to your Python CLI
+    exec "$PY" -m src.run "$@"
+fi
