@@ -12,6 +12,7 @@ from src.classes.Size import Size
 from src.utils.get_metadata import get_github_readme
 from src.utils.get_metadata import get_model_metadata
 import time
+import json
 
 @dataclass
 class ScoreCard:
@@ -56,24 +57,31 @@ class ScoreCard:
         return self.latency
 
     def printTotalScore(self):
-        print(f"net_score {self.totalScore}\n"\
-              f"net_score_latency {self.latency}")
+        pairs = [
+            ("net_score", self.totalScore),
+            ("net_score_latency", self.latency)
+        ]
+        for key, value in pairs:
+            print(json.dumps({key: value}, ensure_ascii=False))
     
     def printSubscores(self):
-        print("Submetric Scores: \n" \
-        f"size_score {self.size.getMetricScore()}\n" \
-        f"size_score_latency {self.size.getLatency()}\n" \
-        f"license {self.license.getMetricScore()}\n" \
-        f"license_latency {self.license.getLatency()}\n" \
-        f"ramp_up_time {self.rampUpTime.getMetricScore()}\n" \
-        f"ramp_up_time_latency {self.rampUpTime.getLatency()}\n" \
-        f"bus_factor {self.busFactor.getMetricScore()}\n" \
-        f"bus_factor_latency {self.busFactor.getLatency()}\n" \
-        f"dataset_and_code_score {self.availableDatasetAndCode.getMetricScore()}\n" \
-        f"dataset_and_code_score_latency {self.availableDatasetAndCode.getLatency()}\n" \
-        f"dataset_quality {self.datasetQuality.getMetricScore()}\n" \
-        f"dataset_quality_latency {self.datasetQuality.getLatency()}\n" \
-        f"code_quality {self.codeQuality.getMetricScore()}\n" \
-        f"code_quality_latency {self.codeQuality.getLatency()}\n" \
-        f"performance_claims {self.performanceClaims.getMetricScore()}\n"\
-        f"performance_claims_latency {self.performanceClaims.getLatency()}\n")
+        pairs = [
+            ("size_score", self.size.getMetricScore()),
+            ("size_score_latency", self.size.getLatency()),
+            ("license", self.license.getMetricScore()),
+            ("license_latency", self.license.getLatency()),
+            ("ramp_up_time", self.rampUpTime.getMetricScore()),
+            ("ramp_up_time_latency", self.rampUpTime.getLatency()),
+            ("bus_factor", self.busFactor.getMetricScore()),
+            ("bus_factor_latency", self.busFactor.getLatency()),
+            ("dataset_and_code_score", self.availableDatasetAndCode.getMetricScore()),
+            ("dataset_and_code_score_latency", self.availableDatasetAndCode.getLatency()),
+            ("dataset_quality", self.datasetQuality.getMetricScore()),
+            ("dataset_quality_latency", self.datasetQuality.getLatency()),
+            ("code_quality", self.codeQuality.getMetricScore()),
+            ("code_quality_latency", self.codeQuality.getLatency()),
+            ("performance_claims", self.performanceClaims.getMetricScore()),
+            ("performance_claims_latency", self.performanceClaims.getLatency()),
+        ]
+        for key, value in pairs:
+            print(json.dumps({key: value}, ensure_ascii=False))
