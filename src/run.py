@@ -61,8 +61,13 @@ def main():
         # assume it's a file with URLs
         url_file = command
         try:
+            urls = []
             with open(url_file, "r") as f:
-                urls = [line.strip() for line in f if line.strip()]
+                for line in f:
+                    line = line.strip()
+                    url_list = line.split(",")
+                    for url in url_list:
+                        urls.append(url.strip())
         except FileNotFoundError:
             print(f"Error: could not find file '{url_file}'", file=sys.stderr)
             sys.exit(1)
