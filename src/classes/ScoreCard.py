@@ -16,13 +16,13 @@ class ScoreCard:
         # Each metric is a field; defaults provided so you can construct empty and fill later
         self.busFactor = BusFactor()
         self.busFactor.setNumContributors(url)
-        self.datasetQuality = DatasetQuality()
+        self.datasetQuality.computeDatasetQuality(url)
         self.size = Size()
         self.license = License()
         self.rampUpTime = RampUpTime()
-        self.performanceClaims = PerformanceClaims()
+        self.performanceClaims
         self.codeQuality = CodeQuality()
-        self.availableDatasetAndCode = AvailableDatasetAndCode()
+        self.AvailableDatasetAndCode.score_dataset_and_code_availability(url)
 
     def setTotalScore(self):
         self.totalScore = 0
