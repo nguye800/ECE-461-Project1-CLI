@@ -72,8 +72,7 @@ def main():
                 try:
                     modelScore = ScoreCard(url)
                     modelScore.setTotalScore()
-                    modelScore.printTotalScore()
-                    modelScore.printSubscores()
+                    modelScore.printScores()
                     exit(0)
 
                 except Exception as e:
