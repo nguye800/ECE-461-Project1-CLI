@@ -10,5 +10,3 @@ def test_codequality_smoke_precomputed(capsys):
     assert m.codeQuality == score
     assert m.metricScore == score
     assert latency >= 0.0
-
-#python -m pytest -q -s test\test_codequality.py

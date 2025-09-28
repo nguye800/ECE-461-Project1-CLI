@@ -1,10 +1,34 @@
-#!/opt/homebrew/opt/python@3.11/bin/python3.11 #this line is because my (Eric's) Mac will not update my Python to the most current version so this manually overwrites it
-
+#!/usr/bin/env python3
+# ./run D:\Lucas College\Purdue\Y4\ECE461\ECE-461-Project1-CLI\urls.txt
+# ./run test
+# ./run install
 import sys
 import json
+import subprocess
 from src.utils.check_url import checkURL
 from src.classes.ScoreCard import ScoreCard
 from src.utils.run_tests import run_testsuite
+import traceback
+
+def log_exception(e):
+    # Full formatted traceback string (multi-line)
+    tb_str = "".join(traceback.TracebackException.from_exception(e).format())
+
+    # Last frame (where it blew up)
+    tb_frames = traceback.extract_tb(e.__traceback__)
+    last = tb_frames[-1] if tb_frames else None
+
+    error_record = {
+        "error_type": e.__class__.__name__,
+        "message": str(e),
+        "filename": getattr(last, "filename", None),
+        "lineno": getattr(last, "lineno", None),
+        "function": getattr(last, "name", None),
+        "code": getattr(last, "line", None),
+    }
+    
+    error_record["traceback"] = tb_str
+    print(json.dumps(error_record, ensure_ascii=False), file=sys.stderr)
 
 def main():
     if len(sys.argv) < 2:
@@ -14,11 +38,18 @@ def main():
     command = sys.argv[1]
 
     if command == "install":
-        print("Installing dependencies... (placeholder)")
+        print("Installing dependencies...")
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "-r", "requirements.txt"])
 
     elif command == "test":
-        print("Running tests... (placeholder)")
-        run_testsuite()
+        print("Running tests...")
+        test_args = sys.argv[2:]
+        saved_argv = sys.argv[:]          # keep original
+        try:
+            sys.argv = [sys.argv[0]] + test_args
+            run_testsuite()               # now its argparse won't see 'test'
+        finally:
+            sys.argv = saved_argv
 
     else:
         # assume it's a file with URLs
@@ -44,6 +75,7 @@ def main():
                         "error": str(e)
                     }
                     print(json.dumps(error_record), file=sys.stderr)
+                    log_exception(e)
             else:
                 # Non-HF URLs (GitHub, etc.) handled later
                 record = {

@@ -17,16 +17,21 @@ class ScoreCard:
         # Each metric is a field; defaults provided so you can construct empty and fill later
         self.busFactor = BusFactor()
         self.busFactor.setNumContributors(url)
-        self.datasetQuality.computeDatasetQuality(url)
+        self.datasetQuality = DatasetQuality()
+        self.datasetQuality.metricScore = self.datasetQuality.computeDatasetQuality(url)
         self.size = Size()
-        self.size.setSize([1024 * 1024 * 500])
+        self.size.setSize(url)
         self.license = License()
+        self.license.metricScore = self.license.evaluate(url)
         self.rampUpTime = RampUpTime()
         readme_text = get_github_readme(url)
         self.rampUpTime.setRampUpTime(readme_text=readme_text)
         self.performanceClaims = PerformanceClaims()
+        self.performanceClaims.metricScore = self.performanceClaims.evaluate(url)
         self.codeQuality = CodeQuality()
-        self.AvailableDatasetAndCode.score_dataset_and_code_availability(url)
+        self.codeQuality.metricScore = self.codeQuality.evaluate(url)
+        self.availableDatasetAndCode = AvailableDatasetAndCode()
+        self.availableDatasetAndCode.metricScore = self.availableDatasetAndCode.score_dataset_and_code_availability(url)
 
     def setTotalScore(self):
         self.totalScore = 0
@@ -37,7 +42,8 @@ class ScoreCard:
         self.totalScore += self.license.getMetricScore() * self.license.getWeighting()
         self.totalScore += self.performanceClaims.getMetricScore() * self.performanceClaims.getWeighting()
         self.totalScore += self.codeQuality.getMetricScore() * self.codeQuality.getWeighting()
-        self.totalScore += self.availableDatasetandCode.getMetricScore() * self.availableDatasetandCode.getWeighting()
+        self.totalScore += self.availableDatasetAndCode.getMetricScore() * self.availableDatasetAndCode.getWeighting()
+        self.totalScore = round(self.totalScore, 3)
 
     def getTotalScore(self) -> float:
         return self.totalScore
@@ -51,7 +57,7 @@ class ScoreCard:
         f"License: {self.license.getMetricScore()}\n" \
         f"Ramp Up Time: {self.rampUpTime.getMetricScore()}\n" \
         f"Bus Factor: {self.busFactor.getMetricScore()}\n" \
-        f"Available Dataset and Code Score: {self.availableDatasetandCode.getMetricScore()}\n" \
+        f"Available Dataset and Code Score: {self.availableDatasetAndCode.getMetricScore()}\n" \
         f"Dataset Quality: {self.datasetQuality.getMetricScore()}\n" \
         f"Code Quality: {self.codeQuality.getMetricScore()}\n" \
         f"Performance Claims: {self.performanceClaims.getMetricScore()}\n")

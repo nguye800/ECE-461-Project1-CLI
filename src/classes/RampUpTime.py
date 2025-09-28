@@ -7,9 +7,8 @@ from src.utils.llm_api import llmAPI
 @dataclass
 
 class RampUpTime(Metric):
-    def __init__(self, metricName="Ramp Up Time", metricWeighting=0.1, rampUpTime=0.0):
+    def __init__(self, metricName="Ramp Up Time", metricWeighting=0.1):
         super().__init__(metricName, 0, metricWeighting)
-        self.rampUpTime = rampUpTime
         self.llm = llmAPI()
 
     def _score_readme_with_llm(self, readme_text: str) -> float:
@@ -37,24 +36,20 @@ class RampUpTime(Metric):
             return 1.0
         elif "0.5" in response_text:
             return 0.5
-        elif "0.0" in response_text:
-            return 0.0
         else:
             return 0.0
 
-    def setRampUpTime(self, readme_text: str | None = None, precomputed_score: float | None = None):
+    def setRampUpTime(self, readme_text: str):
         """
         Set ramp-up time score either from:
         - precomputed_score (manual value for testing), or
         - raw readme_text (evaluated by LLM).
         """
-        if precomputed_score is not None:
-            self.rampUpTime = precomputed_score
-        elif readme_text is not None:
-            self.rampUpTime = self._score_readme_with_llm(readme_text)
+        if readme_text:
+            self.metricScore = self._score_readme_with_llm(readme_text)
         else:
-            self.rampUpTime = 0.0
+            self.metricScore = 0.0
 
     def getRampUpTime(self) -> float:
-        return self.rampUpTime
+        return self.metricScore
 

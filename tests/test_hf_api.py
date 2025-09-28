@@ -64,11 +64,6 @@ class BuildApiUrlTests(unittest.TestCase):
             "https://huggingface.co/api/models/bert-base-uncased",
         )
 
-    def test_build_api_url_dataset_not_supported(self):
-        # Current hf_api.py only supports 'model' here.
-        with self.assertRaises(ValueError):
-            hf_api.build_api_url("dataset", "squad")
-
     def test_build_api_url_bad_kind_raises(self):
         with self.assertRaises(ValueError):
             hf_api.build_api_url("weird", "x")

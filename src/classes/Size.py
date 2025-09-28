@@ -3,30 +3,29 @@ from __future__ import annotations
 from dataclasses import dataclass
 from src.classes.Metric import Metric
 from src.utils.llm_api import llmAPI
+from src.utils.hf_api import hfAPI
+import json
 
 @dataclass
 class Size(Metric):
-    def __init__(self, metricName="Size", metricWeighting=0.1, sizeScore=0.0):
+    def __init__(self, metricName="Size", metricWeighting=0.1):
         super().__init__(metricName, 0, metricWeighting)
-        self.sizeScore = sizeScore
-        self.modelSizeGB = 0.0
         self.paramCount = 0
         self.llm = llmAPI()
 
-    def _score_with_llm(self, model_type: str, param_count: int, file_size_gb: float) -> float:
+    def _score_with_llm(self, url, param_count: int) -> float:
         """Use Purdue’s LLM to contextualize size scoring."""
         prompt = f"""
-        You are evaluating the SIZE metric of a machine learning model.
+        You are evaluating the SIZE metric of a machine learning model. This metric needs to assess whether a parameter count is sufficient for a model of a specific use case.
 
         Information:
-        - Model type: {model_type}
-        - Parameter count: {param_count:,}
-        - File size (GB): {file_size_gb:.2f}
+        - URL to model: {url}
+        - Parameter count: {param_count}
 
         Rate the model's size on a scale of:
         - 1.0 = Size is appropriate and easy to handle for this type of model
-        - 0.5 = Size is large but still manageable
-        - 0.0 = Size is unnecessarily large or difficult to use for most purposes
+        - 0.5 = Size is large but still manageable or too small and may be too generalizing.
+        - 0.0 = Size is unnecessarily large or difficult to use for most purposes or is way too small to be accurate in implementation.
 
         Answer with only the numeric score (1.0, 0.5, or 0.0).
         """
@@ -43,49 +42,35 @@ class Size(Metric):
             print(f"[Size Metric] LLM scoring failed, falling back. Error: {e}")
         return None
 
-    def setSize(self, file_sizes: list[int] | None = None,
-                param_count: int | None = None,
-                model_type: str = "general"):
+    def setSize(self, url):
         """
         Compute size score.
         - If LLM available → ask it to contextualize.
         - Else fallback to rule-based thresholds.
         """
-        if param_count is not None:
-            self.paramCount = param_count
-            self.modelSizeGB = param_count / 1e9
-        elif file_sizes:
-            total_size_bytes = sum(file_sizes)
-            self.modelSizeGB = total_size_bytes / (1024.0 ** 3)
+        api = hfAPI()
+        response = json.loads(api.get_info(url, printCLI=False))
+
+        try:
+            parameter_size = response["data"]["safetensors"]["total"]
+        except (KeyError, TypeError) as e:
+            parameter_size = None
+
+        if parameter_size:
+            self.paramCount = parameter_size
         else:
-            self.sizeScore = 0.0
+            self.metricScore = 0.0
             return
 
-        score = self._score_with_llm(model_type, self.paramCount, self.modelSizeGB)
+        score = self._score_with_llm(url, self.paramCount)
         if score is not None:
-            self.sizeScore = score
-            return
-
-        if self.paramCount > 0:
-            if self.paramCount < 1e9:
-                self.sizeScore = 1.0
-            elif self.paramCount < 10e9:
-                self.sizeScore = 0.5
-            else:
-                self.sizeScore = 0.0
+            self.metricScore = score
         else:
-            if self.modelSizeGB < 1:
-                self.sizeScore = 1.0
-            elif self.modelSizeGB < 10:
-                self.sizeScore = 0.5
-            else:
-                self.sizeScore = 0.0
+            self.metricScore = 0.0
+        return
 
     def getSize(self) -> float:
-        return self.sizeScore
-
-    def getModelSizeGB(self) -> float:
-        return self.modelSizeGB
+        return self.metricScore
 
     def getParamCount(self) -> int:
         return self.paramCount

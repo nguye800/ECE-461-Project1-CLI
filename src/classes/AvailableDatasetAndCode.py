@@ -67,4 +67,4 @@ class AvailableDatasetAndCode(Metric):
         code_score = self.score_code_availability(url)
 
         total_score = 0.5 * dataset_score + 0.5 * code_score
-        return round(total_score, 3
+        return round(total_score, 3)

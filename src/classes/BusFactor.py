@@ -20,7 +20,7 @@ class BusFactor(Metric):
             saturation_coeff = 5
             groupsize = 1 - math.exp((-1.0 / avg) / saturation_coeff)
             self.NumContributors = len(authors)
-            self.metricScore = evenness * groupsize
+            self.metricScore = round(evenness * groupsize, 3)
         else:
             api = llmAPI()
             prompt = "Given this link to a HuggingFace model repository, can you assess the Bus Factor of the model based on size of the organization/members \
@@ -32,7 +32,7 @@ class BusFactor(Metric):
             match = re.search(r"[-+]?\d*\.\d+|\d+", content)
             bus_factor = float(match.group()) if match else None
             if bus_factor:
-                self.metricScore = bus_factor
+                self.metricScore = round(bus_factor, 3)
 
     def getNumContributors(self) -> int:
         return self.NumContributors

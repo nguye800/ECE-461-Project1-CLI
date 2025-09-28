@@ -1,10 +1,11 @@
 from __future__ import annotations
 from dataclasses import dataclass
-from Metric import Metric
-from src.utils.hf_api import get_info
+from src.classes.Metric import Metric
+from src.utils.hf_api import hfAPI
 from src.utils.get_metadata import find_dataset_links
 import re
-
+import math
+import json
 
 @dataclass
 class DatasetQuality(Metric):
@@ -64,8 +65,9 @@ class DatasetQuality(Metric):
             return 0.0
 
         scores = []
+        api = hfAPI()
         for link in dataset_links:
-            dataset_info_str = get_info(link, printCLI=False)
+            dataset_info_str = api.get_info(link, printCLI=False)
             dataset_info = json.loads(dataset_info_str).get("data", {})
             score = self._score_single_dataset(dataset_info)
             scores.append(score)

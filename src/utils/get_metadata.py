@@ -112,7 +112,7 @@ DATASET_URL_RE = re.compile(r"https?://huggingface\.co/datasets/[A-Za-z0-9_.\-]+
 
 def find_dataset_links(url: str):
     api = HfApi()
-    model_id = repo_id_from_url(url)
+    model_id = _repo_id_from_url(url)
 
     info = api.model_info(model_id)
     links = set()
@@ -144,29 +144,33 @@ def find_dataset_links(url: str):
 
     return list(links)
 
-def get_github_readme(github_url: str) -> str:
+def get_github_readme(url: str) -> str:
     """
     Fetch README.md content from a GitHub repo using the GitHub REST API.
     Expects format: https://github.com/<owner>/<repo>
     Returns decoded README text, or "" if not found.
     """
     try:
-        m = re.match(r"^https?://(?:www\.)?github\.com/([^/]+)/([^/]+?)(?:\.git)?/?$", github_url.strip())
-        if not m:
-            raise ValueError(f"Bad GitHub URL: {github_url}")
-        owner, repo = m.group(1), m.group(2)
+        links = find_github_links(url)
+        if links:
+            github_url = links[0]
+            m = re.match(r"^https?://(?:www\.)?github\.com/([^/]+)/([^/]+?)(?:\.git)?/?$", github_url.strip())
+            if not m:
+                raise ValueError(f"Bad GitHub URL: {github_url}")
+            owner, repo = m.group(1), m.group(2)
 
-        url = f"https://api.github.com/repos/{owner}/{repo}/readme"
-        headers = {"Accept": "application/vnd.github+json", "User-Agent": "readme-fetcher/1.0"}
-        r = requests.get(url, headers=headers, timeout=30)
-        if r.status_code == 200:
-            content = r.json().get("content", "")
-            return base64.b64decode(content).decode("utf-8")
+            url = f"https://api.github.com/repos/{owner}/{repo}/readme"
+            headers = {"Accept": "application/vnd.github+json", "User-Agent": "readme-fetcher/1.0"}
+            r = requests.get(url, headers=headers, timeout=30)
+            if r.status_code == 200:
+                content = r.json().get("content", "")
+                return base64.b64decode(content).decode("utf-8")
+            else:
+                return ""
         else:
-            print(f"[get_metadata] ⚠️ No README found for {github_url}, status={r.status_code}")
+            return ""
     except Exception as e:
-        print(f"[get_metadata] ⚠️ Failed to fetch README: {e}")
-    return ""
+        return ""
 
 
 # --- Last-N commit authors from a GitHub repo (no token) ---
