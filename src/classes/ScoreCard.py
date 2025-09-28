@@ -67,35 +67,35 @@ class ScoreCard:
     
     def printScores(self):
         rec = {
-            "name": self.modelName,
-            "category": "MODEL",  # e.g., "MODEL" | "DATASET" | "CODE"
+            "name":self.modelName,
+            "category":"MODEL",  # e.g., "MODEL" | "DATASET" | "CODE"
 
-            "net_score": self.totalScore,
-            "net_score_latency": self.latency,  # or your real overall latency
+            "net_score":self.totalScore,
+            "net_score_latency":self.latency,  # or your real overall latency
 
-            "ramp_up_time": float(self.rampUpTime.getMetricScore()),
-            "ramp_up_time_latency": int(self.rampUpTime.getLatency()),
+            "ramp_up_time":float(self.rampUpTime.getMetricScore()),
+            "ramp_up_time_latency":int(self.rampUpTime.getLatency()),
 
-            "bus_factor": float(self.busFactor.getMetricScore()),
-            "bus_factor_latency": int(self.busFactor.getLatency()),
+            "bus_factor":float(self.busFactor.getMetricScore()),
+            "bus_factor_latency":int(self.busFactor.getLatency()),
 
-            "performance_claims": float(self.performanceClaims.getMetricScore()),
-            "performance_claims_latency": int(self.performanceClaims.getLatency()),
+            "performance_claims":float(self.performanceClaims.getMetricScore()),
+            "performance_claims_latency":int(self.performanceClaims.getLatency()),
 
-            "license": float(self.license.getMetricScore()),
-            "license_latency": int(self.license.getLatency()),
+            "license":float(self.license.getMetricScore()),
+            "license_latency":int(self.license.getLatency()),
 
             # Spec says: object mapping hardware types -> floats
-            "size_score": float(self.size.getMetricScore()),
-            "size_score_latency": int(self.size.getLatency()),
+            "size_score":float(self.size.getMetricScore()),
+            "size_score_latency":int(self.size.getLatency()),
 
-            "dataset_and_code_score": float(self.availableDatasetAndCode.getMetricScore()),
-            "dataset_and_code_score_latency": int(self.availableDatasetAndCode.getLatency()),
+            "dataset_and_code_score":float(self.availableDatasetAndCode.getMetricScore()),
+            "dataset_and_code_score_latency":int(self.availableDatasetAndCode.getLatency()),
 
-            "dataset_quality": float(self.datasetQuality.getMetricScore()),
-            "dataset_quality_latency": int(self.datasetQuality.getLatency()),
+            "dataset_quality":float(self.datasetQuality.getMetricScore()),
+            "dataset_quality_latency":int(self.datasetQuality.getLatency()),
 
-            "code_quality": float(self.codeQuality.getMetricScore()),
+            "code_quality":float(self.codeQuality.getMetricScore()),
             "code_quality_latency": int(self.codeQuality.getLatency()),
         }
 
