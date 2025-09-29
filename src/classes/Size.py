@@ -86,7 +86,7 @@ class Size(Metric):
         self.metricLatency = (time.perf_counter_ns() - t0) // 1_000_000
         device_dict = {dev: round(self.score(model_bytes / mem), 3) for dev, mem in devices.items()}
         self.device_dict = device_dict
-        self.metricScore = sum(device_dict.values() / len(device_dict))
+        self.metricScore = sum(device_dict.values()) / len(device_dict)
         return {dev: round(self.score(model_bytes / mem), 3) for dev, mem in devices.items()}
 
         # score = self._score_with_llm(url, self.paramCount)
