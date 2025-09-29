@@ -11,8 +11,10 @@ from src.utils.run_tests import run_testsuite
 import traceback
 import os
 import datetime
+from dotenv import load_dotenv, dotenv_values
 
 # Read environment config
+load_dotenv()
 LOG_FILE = os.getenv("LOG_FILE", "run.log")
 try:
     LOG_LEVEL = int(os.getenv("LOG_LEVEL", "0"))
