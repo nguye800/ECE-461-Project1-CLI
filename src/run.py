@@ -95,8 +95,8 @@ def main():
         test_args = sys.argv[2:]
         try:
             sys.argv = [sys.argv[0]] + test_args
-            run_testsuite()               # now its argparse won't see 'test'
-            sys.exit(0)
+            ret = run_testsuite()               # now its argparse won't see 'test'
+            sys.exit(ret)
         except Exception as e:
             log_exception(e)
             # print(f"[tests] failed: {e}", file=sys.stderr)
