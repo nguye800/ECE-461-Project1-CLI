@@ -96,13 +96,11 @@ def main():
         try:
             sys.argv = [sys.argv[0]] + test_args
             ret = run_testsuite()               # now its argparse won't see 'test'
-            sys.exit(0)
-            # sys.exit(ret)
+            sys.exit(ret)
         except Exception as e:
             log_exception(e)
             # print(f"[tests] failed: {e}", file=sys.stderr)
-            sys.exit(0)
-            # sys.exit(1)
+            sys.exit(1)
 
     else:
         # assume it's a file with URLs
