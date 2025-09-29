@@ -30,4 +30,5 @@ then
 else
     # delegate to your Python CLI
     exec "$PY" -m src.run "$@"
+    exit 0
 fi
