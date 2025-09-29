@@ -24,7 +24,7 @@ class ScoreCard:
         self.modelName = self.getName(url)
         # Each metric is a field; defaults provided so you can construct empty and fill later
         self.busFactor = BusFactor()
-        self.busFactor.setNumContributors(url)
+        self.busFactor.setNumContributors(url, self.githubURL)
         self.datasetQuality = DatasetQuality()
         self.datasetQuality.metricScore, self.datasetQuality.metricLatency = self.datasetQuality.computeDatasetQuality(url, self.datasetURL)
         self.size = Size()

@@ -171,7 +171,7 @@ class PerformanceClaims(Metric):
         dt_ms = (time.perf_counter_ns() - t0) // 1_000_000
         return score, dt_ms
 
-    def score_model_performance(self, resp) -> float:
+    def score_model_performance(self, resp):
         """
         Returns (score_0_to_1, breakdown).
         Heuristic: normalize each metric to [0,1], average metrics per (task,dataset),
@@ -186,7 +186,7 @@ class PerformanceClaims(Metric):
             per_group.setdefault((task, dataset), []).append(s)
 
         if not per_group:
-            return None, {}
+            return 0.0
 
         group_scores = {k: sum(v) / len(v) for k, v in per_group.items()}
         overall = sum(group_scores.values()) / len(group_scores)

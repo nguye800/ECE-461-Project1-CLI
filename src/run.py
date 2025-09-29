@@ -75,7 +75,7 @@ def main():
         recentGhURL = None
         recentDatasetURL = None
         for url in urls:
-            if checkURL(url):
+            if url and checkURL(url):
                 try:
                     modelScore = ScoreCard(url)
                     
@@ -93,9 +93,8 @@ def main():
                         "error": str(e)
                     }
                     print(json.dumps(error_record), file=sys.stderr)
+                    log_exception(e)
                     sys.exit(1)
-                    
-                    # log_exception(e)
             else:
                 # Non-HF URLs (GitHub, etc.) handled later
                 if "dataset" in url:
