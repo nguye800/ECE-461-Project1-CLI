@@ -94,7 +94,7 @@ class ScoreCard:
             "license_latency":int(self.license.getLatency()),
 
             # Spec says: object mapping hardware types -> floats
-            "size_score":float(self.size.getMetricScore()),
+            "size_score":self.size.device_dict,
             "size_score_latency":int(self.size.getLatency()),
 
             "dataset_and_code_score":float(self.availableDatasetAndCode.getMetricScore()),

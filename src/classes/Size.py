@@ -44,6 +44,14 @@ class Size(Metric):
         except Exception as e:
             print(f"[Size Metric] LLM scoring failed, falling back. Error: {e}")
 
+    def score(self, ratio: float) -> float:
+        # ratio = model_size / device_memory
+        if ratio <= 0.5:
+            return 1.0
+        if ratio >= 1.5:
+            return 0.0
+        return 1.0 - (ratio - 0.5)
+
     def setSize(self, url):
         """
         Compute size score.
@@ -66,15 +74,29 @@ class Size(Metric):
             dt_ms = (time.perf_counter_ns() - t0) // 1_000_000
             self.metricLatency = dt_ms
             return
+        
+        GIB = 1024 ** 3
+        devices = {
+            "raspberry_pi": 1.5 * GIB,
+            "jetson_nano": 3.0 * GIB,
+            "desktop_pc": 7.0 * GIB,
+            "aws_server": 22.0 * GIB,
+        }
+        model_bytes = self.paramCount * 4
+        self.metricLatency = (time.perf_counter_ns() - t0) // 1_000_000
+        device_dict = {dev: round(self.score(model_bytes / mem), 3) for dev, mem in devices.items()}
+        self.device_dict = device_dict
+        self.metricScore = sum(device_dict.values() / len(device_dict))
+        return {dev: round(self.score(model_bytes / mem), 3) for dev, mem in devices.items()}
 
-        score = self._score_with_llm(url, self.paramCount)
-        if score is not None:
-            self.metricScore = score
-        else:
-            self.metricScore = 0.0
+        # score = self._score_with_llm(url, self.paramCount)
+        # if score is not None:
+        #     self.metricScore = score
+        # else:
+        #     self.metricScore = 0.0
 
-        dt_ms = (time.perf_counter_ns() - t0) // 1_000_000
-        self.metricLatency = dt_ms
+        # dt_ms = (time.perf_counter_ns() - t0) // 1_000_000
+        # self.metricLatency = dt_ms
 
     def getSize(self) -> float:
         return self.metricScore
