@@ -29,9 +29,13 @@ class CodeQuality(Metric):
         return 0.0
 
     #computing code quality score and returns score and latency 
-    def evaluate(self, url) -> float:
+    def evaluate(self, url, githubURL) -> float:
         t0 = time.perf_counter_ns()
-        links = find_github_links(url)
+        if githubURL:
+            links = githubURL
+        else:
+            links = find_github_links(url)
+            
         if links:
             prompt = _PROMPT + str(links)
             response = self.llm.main(prompt)

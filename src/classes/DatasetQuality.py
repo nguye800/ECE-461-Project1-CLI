@@ -7,6 +7,7 @@ import re
 import math
 import json
 import time
+from typing import Tuple
 
 @dataclass
 class DatasetQuality(Metric):
@@ -54,7 +55,7 @@ class DatasetQuality(Metric):
 
         return round(min(total_score, 1.0), 3)
 
-    def computeDatasetQuality(self, url: str) -> Tuple[float, int]:
+    def computeDatasetQuality(self, url: str, datasetURL: str) -> Tuple[float, int]:
         """
         For a Hugging Face model URL:
         - Find dataset links mentioned in the model card
@@ -62,7 +63,10 @@ class DatasetQuality(Metric):
         - Return an aggregated score (average across datasets)
         """
         t0 = time.perf_counter_ns()
-        dataset_links = find_dataset_links(url)
+        if datasetURL:
+            dataset_links = [datasetURL]
+        else:
+            dataset_links = find_dataset_links(url)
         if not dataset_links:
             return 0.0, 0
 

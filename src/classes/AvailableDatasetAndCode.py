@@ -10,14 +10,17 @@ class AvailableDatasetAndCode(Metric):
         super().__init__(metricName, 0, metricWeighting)
         
     
-    def score_dataset_availability(self, url: str) -> float:
+    def score_dataset_availability(self, url: str, datasetURL) -> float:
         """
         Returns a score between 0 and 1 for dataset availability in a Hugging Face model.
         0 = no datasets mentioned
         0.5 = at least one dataset mentioned, but unclear (non-HF or weak link)
         1.0 = at least one Hugging Face dataset explicitly linked
         """
-        dataset_links = find_dataset_links(url)
+        if datasetURL:
+            dataset_links = [datasetURL]
+        else:
+            dataset_links = find_dataset_links(url)
 
         if not dataset_links:
             return 0.0
@@ -30,14 +33,17 @@ class AvailableDatasetAndCode(Metric):
         # If datasets mentioned but not on HF, partial score
         return 0.5
     
-    def score_code_availability(self, url: str) -> float:
+    def score_code_availability(self, url: str, githubURL) -> float:
         """
         Returns a score between 0 and 1 for code availability in a Hugging Face model.
         0   = no GitHub (or external code) links
         0.5 = some GitHub links present, but repo might be unrelated / unclear
         1.0 = at least one clear GitHub repo link (likely the model's codebase)
         """
-        github_links = find_github_links(url)
+        if githubURL:
+            github_links = [githubURL]
+        else:
+            github_links = find_github_links(url)
 
         if not github_links:
             return 0.0
@@ -54,7 +60,7 @@ class AvailableDatasetAndCode(Metric):
         return 0.5
 
 
-    def score_dataset_and_code_availability(self, url: str) -> float:
+    def score_dataset_and_code_availability(self, url: str, datasetURL, githubURL) -> float:
         """
         Combine dataset and code availability scores into a single score (0–1).
         
@@ -65,8 +71,8 @@ class AvailableDatasetAndCode(Metric):
         - Otherwise returns a value in between
         """
         t0 = time.perf_counter_ns()
-        dataset_score = self.score_dataset_availability(url)
-        code_score = self.score_code_availability(url)
+        dataset_score = self.score_dataset_availability(url, datasetURL)
+        code_score = self.score_code_availability(url, githubURL)
 
         total_score = 0.5 * dataset_score + 0.5 * code_score
         dt_ms = (time.perf_counter_ns() - t0) // 1_000_000

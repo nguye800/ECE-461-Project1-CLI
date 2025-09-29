@@ -19,12 +19,14 @@ from urllib.parse import urlparse
 class ScoreCard:
     def __init__(self, url):
         t0 = time.perf_counter_ns()
+        self.datasetURL = None
+        self.githubURL = None
         self.modelName = self.getName(url)
         # Each metric is a field; defaults provided so you can construct empty and fill later
         self.busFactor = BusFactor()
         self.busFactor.setNumContributors(url)
         self.datasetQuality = DatasetQuality()
-        self.datasetQuality.metricScore, self.datasetQuality.metricLatency = self.datasetQuality.computeDatasetQuality(url)
+        self.datasetQuality.metricScore, self.datasetQuality.metricLatency = self.datasetQuality.computeDatasetQuality(url, self.datasetURL)
         self.size = Size()
         self.size.setSize(url)        
         self.license = License()
@@ -35,9 +37,9 @@ class ScoreCard:
         self.performanceClaims = PerformanceClaims()
         self.performanceClaims.metricScore, self.performanceClaims.metricLatency = self.performanceClaims.evaluate(url)
         self.codeQuality = CodeQuality()
-        self.codeQuality.metricScore, self.codeQuality.metricLatency = self.codeQuality.evaluate(url)
+        self.codeQuality.metricScore, self.codeQuality.metricLatency = self.codeQuality.evaluate(url, self.githubURL)
         self.availableDatasetAndCode = AvailableDatasetAndCode()
-        self.availableDatasetAndCode.metricScore, self.availableDatasetAndCode.metricLatency = self.availableDatasetAndCode.score_dataset_and_code_availability(url)
+        self.availableDatasetAndCode.metricScore, self.availableDatasetAndCode.metricLatency = self.availableDatasetAndCode.score_dataset_and_code_availability(url, self.datasetURL, self.githubURL)
         self.latency = (time.perf_counter_ns() - t0) // 1_000_000
 
     def setGithubURL(self, url):
