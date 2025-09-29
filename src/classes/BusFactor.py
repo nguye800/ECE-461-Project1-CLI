@@ -13,9 +13,12 @@ class BusFactor(Metric):
     def __init__(self, metricName="Bus Factor", metricWeighting = 0.1):
         super().__init__(metricName, 0, metricWeighting)
 
-    def setNumContributors(self, url):
+    def setNumContributors(self, url, githubURL):
         t0 = time.perf_counter_ns()
-        links = find_github_links(url)
+        if githubURL:
+            links = [githubURL]
+        else:
+            links = find_github_links(url)
         if links:
             avg, std, authors = get_collaborators_github(links[0], n=200)
             evenness = 1.0 / (1.0 + (std / avg) **2) # rewards balanced contribution, penalizes concentration
@@ -30,7 +33,8 @@ class BusFactor(Metric):
                 I would like you to return a single value from 0-1 with 1 being perfect bus factor and no risk involved, and 0 being one singular contributor doing all the work. \
                 This response should just be the 0-1 value with no other text given."
             response = api.main(f"URL: {url}, instructions: {prompt}")
-            match = re.search(r"[-+]?\d*\.\d+|\d+", response)
+            PAT = re.compile(r'\b(?:1\.0|0\.5|0\.0)\b')
+            match = re.search(PAT, response)
             bus_factor = float(match.group()) if match else None
             if bus_factor:
                 self.metricScore = round(bus_factor, 3)

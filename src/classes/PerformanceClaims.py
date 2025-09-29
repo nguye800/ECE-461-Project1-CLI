@@ -148,7 +148,7 @@ class PerformanceClaims(Metric):
         self.llm = llmAPI()
         
 
-    def evaluate(self, url: str) -> float:
+    def evaluate(self, url: str) -> Tuple[float, int]:
         t0 = time.perf_counter_ns()
         api = hfAPI()
         modelinfo = json.loads(api.get_info(url, printCLI=False))
@@ -171,7 +171,7 @@ class PerformanceClaims(Metric):
         dt_ms = (time.perf_counter_ns() - t0) // 1_000_000
         return score, dt_ms
 
-    def score_model_performance(self, resp: Dict[str, Any]) -> Tuple[Optional[float], Dict[str, Any]]:
+    def score_model_performance(self, resp) -> float:
         """
         Returns (score_0_to_1, breakdown).
         Heuristic: normalize each metric to [0,1], average metrics per (task,dataset),
