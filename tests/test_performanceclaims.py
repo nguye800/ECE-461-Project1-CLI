@@ -1,18 +1,61 @@
-# import unittest
-# from src.classes.PerformanceClaims import PerformanceClaims
+import unittest
+from unittest.mock import patch
+import json
 
-# class TestPerformanceClaims(unittest.TestCase):
-#     def test_no_results(self):
-#         metric = PerformanceClaims("dummy")
-#         metric.benchmarks = {"accuracy": 0.0}
-#         self.assertEqual(metric.evaluate("https://fakeurl.com"), 0.0)
+from src.classes.PerformanceClaims import PerformanceClaims
 
-#     def test_partial_results(self):
-#         metric = PerformanceClaims("dummy")
-#         metric.benchmarks = {"accuracy": 0.6}  # below threshold
-#         self.assertLess(metric.evaluate("https://fakeurl.com"), 1.0)
+# Fake HF client that returns the JSON structure evaluate() expects
+class FakeHF:
+    def __init__(self, payload): self.payload = payload
+    def get_info(self, url, printCLI=False): return json.dumps(self.payload)
 
-#     def test_good_results(self):
-#         metric = PerformanceClaims("dummy")
-#         metric.benchmarks = {"accuracy": 0.95}
-#         self.assertEqual(metric.evaluate("https://fakeurl.com"), 1.0)
+class LLMResp:
+    def __init__(self, text): self.text = text
+    def main(self, prompt: str) -> str: return self.text
+
+class TestPerformanceClaims(unittest.TestCase):
+    @patch("src.classes.PerformanceClaims.hfAPI")
+    def test_model_index_scoring(self, HF):
+        # Minimal model-index with two metrics on one (task, dataset)
+        modelinfo = {
+            "data": {
+                "model-index": [
+                    {
+                        "results": [
+                            {
+                                "task": {"type": "text-classification"},
+                                "dataset": {"name": "imdb"},
+                                "metrics": [
+                                    {"type": "accuracy", "value": 0.90},
+                                    {"type": "f1",       "value": 0.88},
+                                ],
+                            }
+                        ]
+                    }
+                ]
+            }
+        }
+        HF.return_value = FakeHF(modelinfo)
+        m = PerformanceClaims()
+        score, ms = m.evaluate("https://huggingface.co/org/model")
+        self.assertGreaterEqual(score, 0.85)  # ~avg(0.90, 0.88)
+        self.assertLessEqual(score, 1.0)
+        self.assertIsInstance(ms, int)
+
+    @patch("src.classes.PerformanceClaims.hfAPI")
+    def test_llm_fallback_0_5(self, HF):
+        # No model-index -> triggers LLM fallback
+        HF.return_value = FakeHF({"data": {}})
+        m = PerformanceClaims(); m.llm = LLMResp("0.5")
+        score, _ = m.evaluate("https://huggingface.co/model/noindex")
+        self.assertEqual(score, 0.5)
+
+    @patch("src.classes.PerformanceClaims.hfAPI")
+    def test_llm_fallback_default_0_0_on_garbage(self, HF):
+        HF.return_value = FakeHF({"data": {}})
+        m = PerformanceClaims(); m.llm = LLMResp("not a valid token")
+        score, _ = m.evaluate("https://huggingface.co/model/noindex")
+        self.assertEqual(score, 0.0)
+
+if __name__ == "__main__":
+    unittest.main()

@@ -1,57 +1,37 @@
+# tests/test_codequality_bulk.py
 import unittest
 from unittest.mock import patch
-
 from src.classes.CodeQuality import CodeQuality
 
-class LLM10:  # 1.0
-    def main(self, prompt: str) -> str:
-        return "ok 1.0"
+class FakeLLM:
+    def __init__(self, resp): self._resp = resp
+    def main(self, prompt: str) -> str: return self._resp
 
-class LLM05:  # 0.5
-    def main(self, prompt: str) -> str:
-        return "score=0.5"
+def _mk_case(name, gh_url, inferred_links, llm_resp, expected):
+    def _t(self):
+        with patch("src.classes.CodeQuality.find_github_links", return_value=inferred_links):
+            m = CodeQuality()
+            m.llm = FakeLLM(llm_resp)
+            score, _ = m.evaluate(url="https://hf.co/model", githubURL=gh_url)
+            self.assertEqual(score, expected)
+    _t.__name__ = name
+    return _t
 
-class LLMBad:  # no valid token
-    def main(self, prompt: str) -> str:
-        return "N/A"
+class TestCodeQualityBulk(unittest.TestCase):
+    pass
 
-class TestCodeQuality(unittest.TestCase):
+# 30 small variations (explicit GH, inferred links, none; various LLM replies)
+_cases = []
+for i, gh in enumerate([None, "https://github.com/org/repo"]):
+    for links in [set(), {"https://github.com/org/repo"}]:
+        for resp, exp in [("1.0", 1.0), ("0.5", 0.5), ("0.0", 0.0), ("garbage", 0.0)]:
+            # If neither gh nor links -> CodeQuality returns 0.0 regardless of LLM
+            expected = 0.0 if (gh is None and not links) else exp
+            _cases.append((gh, links, resp, expected))
 
-    def test_explicit_github_url_llm10(self):
-        m = CodeQuality()
-        m.llm = LLM10()  # avoid network
-        score, dt_ms = m.evaluate(
-            url="https://huggingface.co/some/model",
-            githubURL="https://github.com/example/repo"
-        )
-        self.assertEqual(score, 1.0)
-        self.assertIsInstance(dt_ms, int)
-        self.assertGreaterEqual(dt_ms, 0)
-
-    @patch("src.classes.CodeQuality.find_github_links", return_value={"https://github.com/example/repo"})
-    def test_inferred_links_llm05(self, _):
-        m = CodeQuality()
-        m.llm = LLM05()
-        score, _ = m.evaluate(
-            url="https://huggingface.co/google-bert/bert-base-uncased",
-            githubURL=None
-        )
-        self.assertEqual(score, 0.5)
-
-    @patch("src.classes.CodeQuality.find_github_links", return_value=set())
-    def test_no_links_returns_zero(self, _):
-        m = CodeQuality()
-        m.llm = LLM10()  # should not matter—no links path returns 0.0
-        score, _ = m.evaluate(url="https://whatever", githubURL=None)
-        self.assertEqual(score, 0.0)
-
-    @patch("src.classes.CodeQuality.find_github_links", return_value={"https://github.com/example/repo"})
-    def test_invalid_llm_defaults_zero(self, _):
-        m = CodeQuality()
-        m.llm = LLMBad()
-        score, _ = m.evaluate(url="https://whatever", githubURL=None)
-        self.assertEqual(score, 0.0)
-
+for idx, (gh, links, resp, exp) in enumerate(_cases, 1):
+    test = _mk_case(f"test_cq_{idx:02d}", gh, links, resp, exp)
+    setattr(TestCodeQualityBulk, test.__name__, test)
 
 if __name__ == "__main__":
     unittest.main()

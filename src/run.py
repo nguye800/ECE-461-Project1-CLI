@@ -5,12 +5,10 @@
 import sys
 import json
 import subprocess
-from src.utils.check_url import checkURL
-from src.classes.ScoreCard import ScoreCard
 from src.utils.run_tests import run_testsuite
 import traceback
 import os
-from datetime import datetime
+import datetime
 from dotenv import load_dotenv, dotenv_values
 
 # Read environment config
@@ -37,7 +35,7 @@ def print_full_exception(e):
         "function": getattr(last, "name", None),
         "code": getattr(last, "line", None),
     }
-    
+   
     error_record["traceback"] = tb_str
     print(json.dumps(error_record, ensure_ascii=False), file=sys.stderr)
 
@@ -88,22 +86,24 @@ def main():
             log_exception(e)
             # print(f"[install] failed: {e}", file=sys.stderr)
             sys.exit(1)
-
+           
     elif command == "test":
         log("Running tests...", level=1)
-        # print("Running tests...")
         test_args = sys.argv[2:]
+        # forward args to your unittest runner
+        sys.argv = [sys.argv[0]] + test_args
         try:
-            sys.argv = [sys.argv[0]] + test_args
-            ret = run_testsuite()               # now its argparse won't see 'test'
-            sys.exit(ret)
+            code = run_testsuite()   # ← get the real exit code
         except Exception as e:
             log_exception(e)
-            # print(f"[tests] failed: {e}", file=sys.stderr)
-            sys.exit(1)
+            code = 1                 # on exception, fail the run
+        sys.exit(code)
 
     else:
         # assume it's a file with URLs
+        from src.utils.check_url import checkURL
+        from src.classes.ScoreCard import ScoreCard
+
         url_file = command
         try:
             urls = []
@@ -124,7 +124,7 @@ def main():
             if url and checkURL(url):
                 try:
                     modelScore = ScoreCard(url)
-                    
+                   
                     if recentDatasetURL:
                         modelScore.setDatasetURL(recentDatasetURL)
                     if recentGhURL:
