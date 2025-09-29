@@ -52,7 +52,7 @@ def main():
         try:
             sys.argv = [sys.argv[0]] + test_args
             run_testsuite()               # now its argparse won't see 'test'
-            exit(0)
+            sys.exit(0)
         except Exception as e:
             print(f"[tests] failed: {e}", file=sys.stderr)
             sys.exit(1)
