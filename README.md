@@ -14,7 +14,7 @@ ECE-461-Project1-CLI/
 │   ├── run.py                     # CLI entry point (invoked by ./run)
 │   ├── classes/                   # Metric implementations
 │   │   ├── AvailableDatasetAndCode.py  # Dataset/code availability scoring
-│   │   ├── BusFactor.py               # Maintainer distribution heuristic
+│   │   ├── BusFactor.py               # Number of evenly distributed active contributors score
 │   │   ├── CodeQuality.py             # Repository lint/readability score
 │   │   ├── DatasetQuality.py          # Data documentation and fidelity
 │   │   ├── License.py                 # License compatibility check
