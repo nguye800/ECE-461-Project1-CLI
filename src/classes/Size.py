@@ -13,6 +13,7 @@ class Size(Metric):
     def __init__(self, metricName="Size", metricWeighting=0.1):
         super().__init__(metricName, 0, metricWeighting)
         self.paramCount = 0
+        self.device_dict = {}
         self.llm = llmAPI()
 
     def _score_with_llm(self, url, param_count: int) -> float:
