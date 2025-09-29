@@ -10,7 +10,7 @@ from src.classes.ScoreCard import ScoreCard
 from src.utils.run_tests import run_testsuite
 import traceback
 import os
-import datetime
+from datetime import datetime
 from dotenv import load_dotenv, dotenv_values
 
 # Read environment config
